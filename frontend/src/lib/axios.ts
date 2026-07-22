@@ -1,13 +1,10 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { tokenStorage } from "./token-storage";
 
-/**
- * Cliente Axios único para toda la app. Envuelve la respuesta del backend
- * (que llega como { success, statusCode, data, timestamp }) y devuelve
- * directamente `data`, así los servicios de cada feature no repiten el unwrap.
- */
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1",
+  baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -61,7 +58,7 @@ api.interceptors.response.use(
 
     try {
       const { data } = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1"}/auth/refresh`,
+        `${API_URL}/auth/refresh`,
         { refreshToken },
       );
       const { accessToken, refreshToken: newRefreshToken } = data.data ?? data;

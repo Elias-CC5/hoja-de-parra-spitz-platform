@@ -18,6 +18,11 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { UsersModule } from './users/users.module';
 
+// 🚀 IMPORTACIONES DE DOMINIO
+import { CategoriesModule } from './categories/categories.module'; // 👈 IMPORTANTE
+import { ProductsModule } from './products/products.module';
+import { UploadsModule } from './uploads/uploads.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -36,21 +41,16 @@ import { UsersModule } from './users/users.module';
     }),
     DatabaseModule,
 
-    // Módulos de dominio
+    // Módulos de dominio activos
     AuthModule,
     UsersModule,
-    // Los siguientes módulos se irán agregando de forma incremental:
-    // CategoriesModule, ProductsModule, ServicesCatalogModule, CartModule,
-    // OrdersModule, QuotationsModule, ReservationsModule, PaymentsModule,
-    // AdvertisementsModule, ReviewsModule, FavoritesModule, UploadsModule,
-    // MailModule, ChatbotModule, DashboardModule
+    CategoriesModule, // 👈 1. Agrégalo aquí antes de ProductsModule
+    ProductsModule,   // 👈 2. Ya no lanzará el error de "Entity metadata for Product#category was not found"
+    UploadsModule,
   ],
   providers: [
-    // Autenticación JWT aplicada globalmente; se libera con @Public()
     { provide: APP_GUARD, useClass: JwtAuthGuard },
-    // Formato de respuesta consistente en toda la API
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
-    // Formato de error consistente en toda la API
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
   ],
 })

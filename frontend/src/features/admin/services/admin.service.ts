@@ -13,6 +13,15 @@ export interface DashboardStats {
   topProducts: { productId: string; name: string; unitsSold: number }[];
 }
 
+export interface CreateProductDto {
+  name: string;
+  description?: string;
+  price: number;
+  category?: string;
+  isAvailable?: boolean;
+  images?: { url: string }[];
+}
+
 export const adminService = {
   getStats: () => api.get<never, DashboardStats>("/dashboard/stats"),
   findAllOrders: () => api.get<never, Order[]>("/orders"),
@@ -26,4 +35,9 @@ export const adminService = {
   updateReservationStatus: (id: string, status: string) =>
     api.patch<never, Reservation>(`/reservations/${id}/status`, { status }),
   findAllProducts: () => api.get<never, { items: Product[] }>("/products", { params: { limit: 100 } }),
+
+  // 🛠️ Ya podemos usar la ruta relativa /products limpia
+  createProduct: (data: CreateProductDto) => api.post<never, Product>("/products", data),
+
+  deleteProduct: (id: string) => api.delete<never, void>(`/products/${id}`),
 };

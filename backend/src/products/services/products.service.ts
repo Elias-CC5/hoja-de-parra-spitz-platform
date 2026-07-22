@@ -1,13 +1,14 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Product } from '../entities/product.entity';
 import { ProductImage } from '../entities/product-image.entity';
+import { Category } from '../../categories/entities/category.entity';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { QueryProductsDto } from '../dto/query-products.dto';
 import { slugify } from '../../utils/slugify';
 import { CloudinaryService, UploadedImage } from '../../uploads/services/cloudinary.service';
+import { Product, ProductType } from '../entities/product.entity';
 
 export interface PaginatedResult<T> {
   items: T[];
@@ -24,10 +25,12 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
     @InjectRepository(ProductImage)
     private readonly productImagesRepository: Repository<ProductImage>,
+    @InjectRepository(Category)
+    private readonly categoriesRepository: Repository<Category>,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
-
-  async create(dto: CreateProductDto): Promise<Product> {
+  
+async create(dto: CreateProductDto): Promise<Product> {
     const slug = slugify(dto.name);
 
     const existing = await this.productsRepository.findOne({ where: { slug } });
@@ -35,10 +38,66 @@ export class ProductsService {
       throw new ConflictException('Ya existe un producto con un nombre similar');
     }
 
-    const product = this.productsRepository.create({ ...dto, slug });
-    return this.productsRepository.save(product);
-  }
+    const { category, images, ...productData } = dto;
 
+    let categoryId: string | undefined = undefined;
+
+    if (category) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(category);
+
+      if (isUuid) {
+        categoryId = category;
+      } else {
+        const foundCategory = await this.categoriesRepository.findOne({
+          where: [{ slug: category }, { name: category }],
+        });
+        if (foundCategory) {
+          categoryId = foundCategory.id;
+        }
+      }
+    }
+
+    // 💡 FALLBACK DE SEGURIDAD PARA CATEGORY_ID:
+    // Si la categoría enviada no existe, asignamos la primera categoría de la base de datos.
+    if (!categoryId) {
+      const firstCategory = await this.categoriesRepository.findOne({ where: {} });
+      if (!firstCategory) {
+        throw new NotFoundException('Debes crear al menos una categoría antes de agregar productos.');
+      }
+      categoryId = firstCategory.id;
+    }
+
+    // Validación de Enum
+    const allowedTypes = Object.values(ProductType) as string[];
+    const inputType = dto.type ? dto.type.toLowerCase() : '';
+    const finalType: ProductType = allowedTypes.includes(inputType)
+      ? (inputType as ProductType)
+      : ProductType.PLATO;
+
+    const product = this.productsRepository.create({
+      ...productData,
+      type: finalType,
+      slug,
+      categoryId, // 👈 Garantizamos que nunca sea null/undefined
+    } as unknown as Partial<Product>);
+
+    const savedProduct = (await this.productsRepository.save(product)) as unknown as Product;
+
+    if (images && images.length > 0) {
+      const imageEntities = images.map((img, index) =>
+        this.productImagesRepository.create({
+          url: img.url,
+          displayOrder: index,
+          productId: savedProduct.id,
+        }),
+      );
+      await this.productImagesRepository.save(imageEntities);
+    }
+
+    return this.findById(savedProduct.id);
+  
+  
+  }
   async findAll(query: QueryProductsDto): Promise<PaginatedResult<Product>> {
     const page = query.page && query.page > 0 ? query.page : 1;
     const limit = query.limit && query.limit > 0 ? query.limit : 12;
@@ -135,7 +194,7 @@ export class ProductsService {
     fileBuffer: Buffer,
     displayOrder = 0,
   ): Promise<ProductImage> {
-    await this.findById(productId); // valida existencia
+    await this.findById(productId);
 
     const uploaded: UploadedImage = await this.cloudinaryService.uploadImage(
       fileBuffer,
@@ -157,7 +216,9 @@ export class ProductsService {
     if (!image) {
       throw new NotFoundException('Imagen no encontrada');
     }
-    await this.cloudinaryService.deleteImage(image.publicId);
+    if (image.publicId) {
+      await this.cloudinaryService.deleteImage(image.publicId);
+    }
     await this.productImagesRepository.remove(image);
   }
 

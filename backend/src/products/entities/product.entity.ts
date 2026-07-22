@@ -26,7 +26,7 @@ export class Product extends BaseEntity {
   @Column({ type: 'text' })
   description: string;
 
-  @Column({ type: 'enum', enum: ProductType })
+  @Column({ type: 'enum', enum: ProductType, default: ProductType.PLATO })
   type: ProductType;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })

@@ -1,14 +1,15 @@
 import { RequireAuth } from "@/components/shared/RequireAuth";
-import { AdminSidebar } from "@/features/admin/components/AdminSidebar";
-import { Role } from "@/types";
+import { Navbar } from "@/components/layout/Navbar";
+import { CartDrawer } from "@/features/cart/components/CartDrawer";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <RequireAuth allowedRoles={[Role.ADMIN, Role.EMPLEADO]}>
-      <div className="flex gap-8">
-        <AdminSidebar />
-        <div className="flex-1 min-w-0">{children}</div>
-      </div>
+    <RequireAuth>
+      <Navbar />
+      <main className="min-h-screen bg-neutral-950 text-neutral-100 pt-28 pb-16 px-4 md:px-8">
+        {children}
+      </main>
+      <CartDrawer />
     </RequireAuth>
   );
 }

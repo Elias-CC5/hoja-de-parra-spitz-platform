@@ -73,13 +73,13 @@ export class ProductsController {
     return this.productsService.update(id, dto);
   }
 
-  @ApiBearerAuth()
+@ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.EMPLEADO)
   @Post(':id/images')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
-  addImage(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+  addImage(@Param('id') id: string, @UploadedFile() file: any) {
     return this.productsService.addImage(id, file.buffer);
   }
 

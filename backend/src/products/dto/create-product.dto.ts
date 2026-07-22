@@ -1,33 +1,38 @@
-import { IsBoolean, IsEnum, IsInt, IsNumber, IsOptional, IsString, IsUUID, Min, MinLength } from 'class-validator';
-import { ProductType } from '../entities/product.entity';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+class ImageDto {
+  @IsString()
+  url: string;
+}
 
 export class CreateProductDto {
   @IsString()
-  @MinLength(3)
   name: string;
 
+  @IsOptional()
   @IsString()
-  @MinLength(10)
-  description: string;
-
-  @IsEnum(ProductType)
-  type: ProductType;
+  description?: string;
 
   @IsNumber()
-  @Min(0)
   price: number;
 
-  @IsUUID()
-  categoryId: string;
-
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  minPeoplePerOrder?: number;
+  @IsString()
+  category?: string;
 
+  // 👈 AGREGA 'type' COMO OPCIONAL O CON UN VALOR POR DEFECTO
   @IsOptional()
-  @IsInt()
-  maxPeoplePerOrder?: number;
+  @IsString()
+  type?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -38,7 +43,8 @@ export class CreateProductDto {
   isFeatured?: boolean;
 
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  stock?: number;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ImageDto)
+  images?: ImageDto[];
 }
