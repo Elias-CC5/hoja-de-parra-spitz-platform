@@ -22,6 +22,24 @@ export interface CreateProductDto {
   images?: { url: string }[];
 }
 
+// 🏷️ Interfaces para Categorías
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  type: 'producto' | 'servicio';
+  imageUrl?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
+export interface CreateCategoryDto {
+  name: string;
+  description?: string;
+  type: 'producto' | 'servicio';
+}
+
 export const adminService = {
   getStats: () => api.get<never, DashboardStats>("/dashboard/stats"),
   findAllOrders: () => api.get<never, Order[]>("/orders"),
@@ -40,4 +58,9 @@ export const adminService = {
   createProduct: (data: CreateProductDto) => api.post<never, Product>("/products", data),
 
   deleteProduct: (id: string) => api.delete<never, void>(`/products/${id}`),
+
+  // 🏷️ Métodos de Categorías
+  findAllCategories: () => api.get<never, Category[]>("/categories"),
+  createCategory: (data: CreateCategoryDto) => api.post<never, Category>("/categories", data),
+  deleteCategory: (id: string) => api.delete<never, void>(`/categories/${id}`),
 };

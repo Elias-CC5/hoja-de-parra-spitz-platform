@@ -7,6 +7,7 @@ import {
   FileText, 
   CalendarDays, 
   Package, 
+  FolderTree, // 👈 Nuevo icono para Categorías
   ShieldCheck,
   TrendingUp 
 } from "lucide-react";
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText },
   { href: "/admin/reservas", label: "Reservas", icon: CalendarDays },
   { href: "/admin/productos", label: "Productos", icon: Package },
+  { href: "/admin/categorias", label: "Categorías", icon: FolderTree }, // 👈 Agregado aquí
 ];
 
 export function AdminSidebar() {
