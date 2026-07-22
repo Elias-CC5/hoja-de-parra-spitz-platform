@@ -3,73 +3,51 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================
+   CONFIGURACIÓN GLOBAL Y VARIABLES (Negro + Amarillo)
+   ============================================ */
 :root {
   --radius: 0.5rem;
 
-  /* Carbón cálido — fondo principal, oscuro tipo asador premium */
-  --background: #1A1512;
-  --foreground: #F2E9DD;
+  /* Negro Azabache / Carbón Profundo */
+  --background: #0D0D0D;
+  --foreground: #F5F5F5;
 
-  /* Marrón cuero/madera quemada — color de marca */
-  --primary: #5A2E1D;
-  --primary-foreground: #F2E9DD;
+  /* Amarillo Eléctrico / Dorado Brasa */
+  --primary: #FACC15;
+  --primary-foreground: #000000;
 
-  /* Brasa / naranja fuego — acento (CTAs, detalles calientes) */
-  --accent: #D9531E;
-  --accent-foreground: #1A1512;
+  --accent: #EAB308;
+  --accent-foreground: #000000;
 
-  --secondary: #2A2119;
-  --secondary-foreground: #F2E9DD;
+  --secondary: #171717;
+  --secondary-foreground: #F5F5F5;
 
-  --muted: #241D17;
-  --muted-foreground: #B8AA98;
+  --muted: #262626;
+  --muted-foreground: #A3A3A3;
 
-  --card: #211A15;
-  --card-foreground: #F2E9DD;
+  --card: #141414;
+  --card-foreground: #F5F5F5;
 
-  --popover: #211A15;
-  --popover-foreground: #F2E9DD;
+  --popover: #141414;
+  --popover-foreground: #F5F5F5;
 
-  --destructive: #B8321E;
-  --destructive-foreground: #F2E9DD;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
 
-  --border: #3A2E22;
-  --input: #3A2E22;
-  --ring: #D9531E;
+  --border: #262626;
+  --input: #262626;
+  --ring: #FACC15;
 
-  /* Fallback de fuentes por si las variables de next/font no llegan a cargar */
   --font-fraunces: "Georgia", "Times New Roman", serif;
   --font-inter: system-ui, -apple-system, sans-serif;
 }
 
 .dark {
-  --background: #100C0A;
-  --foreground: #F2E9DD;
-
-  --primary: #D9531E;
-  --primary-foreground: #100C0A;
-
-  --accent: #E8722E;
-  --accent-foreground: #100C0A;
-
-  --secondary: #221A14;
-  --secondary-foreground: #F2E9DD;
-
-  --muted: #1C1611;
-  --muted-foreground: #A69881;
-
-  --card: #17120E;
-  --card-foreground: #F2E9DD;
-
-  --popover: #17120E;
-  --popover-foreground: #F2E9DD;
-
-  --destructive: #C2431E;
-  --destructive-foreground: #100C0A;
-
-  --border: #2E241B;
-  --input: #2E241B;
-  --ring: #E8722E;
+  --background: #050505;
+  --card: #0A0A0A;
+  --popover: #0A0A0A;
+  --border: #1F1F1F;
 }
 
 @theme inline {
@@ -113,28 +91,26 @@ h1, h2, h3, .font-display {
 }
 
 /* ============================================
-   COVERFLOW 3D — profundidad + reflejo espejo
+   COVERFLOW 3D
    ============================================ */
-
 .coverflow-perspective {
   perspective: 2000px;
   perspective-origin: 50% 30%;
 }
 
 .coverflow-stage {
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 6%, black 100%);
   mask-image: linear-gradient(to bottom, transparent, black 6%, black 100%);
-}
-
-@keyframes coverflow-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-33.333%); }
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 6%, black 100%);
 }
 
 .animate-coverflow {
   width: max-content;
   animation: coverflow-scroll 55s linear infinite;
   transform-style: preserve-3d;
+}
+
+@keyframes coverflow-scroll {
+  to { transform: translateX(-33.333%); }
 }
 
 .coverflow-card-wrap {
@@ -145,8 +121,8 @@ h1, h2, h3, .font-display {
 
 .coverflow-card {
   transform: rotateY(24deg) translateZ(-40px) scale(0.92);
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease, box-shadow 0.6s ease;
-  filter: brightness(0.6) saturate(0.85);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s, box-shadow 0.6s;
+  filter: brightness(0.5) saturate(0.8);
   will-change: transform;
   transform-origin: center;
 }
@@ -159,17 +135,17 @@ h1, h2, h3, .font-display {
   transform: rotateY(0deg) scale(1.08) translateZ(60px) !important;
   filter: brightness(1) saturate(1.1);
   z-index: 30;
-  box-shadow: 0 30px 60px -15px rgba(249, 115, 22, 0.4), 0 0 0 1px rgba(251, 191, 36, 0.25);
+  box-shadow: 0 30px 60px -15px rgba(250, 204, 21, 0.35), 0 0 0 1px rgba(234, 179, 8, 0.4);
 }
 
-/* Reflejo espejo: la misma imagen, invertida y desvanecida */
+/* Reflejo espejo */
 .coverflow-reflection {
   position: relative;
   transform: scaleY(-1) rotateY(24deg) translateZ(-40px) scale(0.92);
-  opacity: 0.25;
-  -webkit-mask-image: linear-gradient(to bottom, black, transparent 65%);
+  opacity: 0.2;
   mask-image: linear-gradient(to bottom, black, transparent 65%);
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease;
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 65%);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s;
   pointer-events: none;
 }
 
@@ -178,16 +154,15 @@ h1, h2, h3, .font-display {
 }
 
 .coverflow-card-wrap:hover .coverflow-reflection {
-  opacity: 0.4;
+  opacity: 0.35;
   transform: scaleY(-1) rotateY(0deg) scale(1.08) translateZ(60px);
 }
 
 /* ============================================
-   TEXTO Y BRASAS — gradiente animado + partículas
+   TEXTO Y BRASAS (Efectos de Fuego Dorado)
    ============================================ */
-
 .ember-text {
-  background: linear-gradient(90deg, #fbbf24, #f97316, #ea580c, #f97316, #fbbf24);
+  background: linear-gradient(90deg, #FEF08A, #FACC15, #CA8A04, #FACC15, #FEF08A);
   background-size: 300% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -205,11 +180,9 @@ h1, h2, h3, .font-display {
 .ember {
   position: absolute;
   bottom: -20px;
-  width: 4px;
-  height: 4px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fbbf24 0%, #f97316 60%, transparent 100%);
-  box-shadow: 0 0 8px 2px rgba(249, 115, 22, 0.6);
+  background: radial-gradient(circle, #FEF08A 0%, #FACC15 60%, transparent 100%);
+  box-shadow: 0 0 8px 2px rgba(250, 204, 21, 0.7);
   animation: ember-rise linear infinite;
   opacity: 0;
 }
@@ -230,9 +203,8 @@ h1, h2, h3, .font-display {
 .ember-6 { left: 90%; --drift: 25px;  width: 4px; height: 4px; animation-duration: 10s; animation-delay: 1s; }
 
 /* ============================================
-   TOQUE EMOCIONAL — pulso de calor + CTA con fuego
+   EFECTOS DE CALOR Y CTA
    ============================================ */
-
 .heat-pulse {
   animation: heat-breathe 5s ease-in-out infinite;
 }
@@ -242,16 +214,13 @@ h1, h2, h3, .font-display {
   50% { opacity: 1; transform: translateX(-50%) scale(1.08); }
 }
 
-.cta-pulse {
-  position: relative;
-}
-
+.cta-pulse { position: relative; }
 .cta-pulse::before {
   content: "";
   position: absolute;
   inset: -3px;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #fbbf24, #f97316, #fbbf24);
+  background: linear-gradient(90deg, #FEF08A, #FACC15, #FEF08A);
   z-index: -1;
   opacity: 0.5;
   filter: blur(8px);
@@ -263,36 +232,25 @@ h1, h2, h3, .font-display {
   50% { opacity: 0.7; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .animate-coverflow,
-  .ember,
-  .ember-text,
-  .heat-pulse,
-  .cta-pulse::before {
-    animation: none !important;
-  }
-}
 /* ============================================
-   HERO ESTILO "FOOD MENU" — grunge real + llamas + flotantes
+   HERO & PASOS DE PROCESO (How It Works)
    ============================================ */
-
 .grunge-title {
   font-family: var(--font-display), Georgia, serif;
   font-weight: 900;
   letter-spacing: -0.02em;
-  color: #f4ede2;
-  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+  color: #FFFFFF;
+  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.9);
 }
 
-/* Capa de textura grunge superpuesta al texto usando feTurbulence */
 .grunge-overlay {
   position: absolute;
   inset: 0;
   color: transparent;
   -webkit-text-fill-color: transparent;
   background: #000;
-  -webkit-background-clip: text;
   background-clip: text;
+  -webkit-background-clip: text;
   filter: url(#grunge-noise);
   opacity: 0.5;
   mix-blend-mode: multiply;
@@ -309,27 +267,86 @@ h1, h2, h3, .font-display {
 }
 
 .flame-glow {
-  filter: blur(1px) drop-shadow(0 0 30px rgba(249, 115, 22, 0.4));
+  filter: blur(1px) drop-shadow(0 0 30px rgba(250, 204, 21, 0.5));
 }
 
 .flame-path {
   transform-origin: bottom center;
   animation: flame-flicker 3s ease-in-out infinite;
 }
-
 .flame-1 { animation-duration: 3.2s; }
 .flame-2 { animation-duration: 2.6s; animation-delay: 0.4s; }
 
 @keyframes flame-flicker {
-  0%, 100% { transform: scaleY(1) scaleX(1) translateY(0); opacity: 0.95; }
+  0%, 100% { transform: scale(1) translateY(0); opacity: 0.95; }
   25% { transform: scaleY(1.06) scaleX(0.96) translateY(-6px); opacity: 1; }
   50% { transform: scaleY(0.94) scaleX(1.04) translateY(3px); opacity: 0.88; }
   75% { transform: scaleY(1.04) scaleX(0.97) translateY(-3px); opacity: 0.97; }
 }
 
+/* Tarjetas de proceso */
+.step-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(0, 0, 0, 0.2) 100%);
+  backdrop-filter: blur(12px);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: step-fade-up 0.6s ease both;
+}
+
+.step-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(250, 204, 21, 0.4);
+  background: linear-gradient(180deg, rgba(250, 204, 21, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  box-shadow: 0 20px 40px -20px rgba(250, 204, 21, 0.25), 0 0 0 1px rgba(250, 204, 21, 0.1) inset;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #000;
+  background: linear-gradient(135deg, #FACC15, #CA8A04);
+  box-shadow: 0 0 0 4px #0A0A0A, 0 4px 12px rgba(250, 204, 21, 0.4);
+  z-index: 20;
+}
+
+.step-icon {
+  color: #FACC15;
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.step-card:hover .step-icon {
+  transform: scale(1.08) rotate(-4deg);
+  background: #FACC15;
+  color: #000;
+  box-shadow: 0 0 24px rgba(250, 204, 21, 0.5);
+}
+
+.step-connector {
+  background: linear-gradient(90deg, transparent 0%, rgba(250, 204, 21, 0.4) 15%, rgba(250, 204, 21, 0.4) 85%, transparent 100%);
+}
+
+@keyframes step-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.step-card:nth-child(1) { animation-delay: 0.05s; }
+.step-card:nth-child(2) { animation-delay: 0.15s; }
+.step-card:nth-child(3) { animation-delay: 0.25s; }
+.step-card:nth-child(4) { animation-delay: 0.35s; }
+
+/* Accesibilidad */
 @media (prefers-reduced-motion: reduce) {
-  .float-item,
-  .flame-path {
+  .animate-coverflow, .ember, .ember-text, .heat-pulse, 
+  .cta-pulse::before, .float-item, .flame-path, .step-card {
     animation: none !important;
   }
 }
