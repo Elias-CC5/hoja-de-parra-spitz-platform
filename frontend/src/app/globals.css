@@ -107,3 +107,32 @@ body {
 h1, h2, h3, .font-display {
   font-family: var(--font-display), Georgia, serif;
 }
+@layer utilities {
+  /* Sombras y resplandores temáticos de brasas */
+  .shadow-ember {
+    box-shadow: 0 0 25px -5px rgba(234, 88, 12, 0.3);
+  }
+  
+  .border-ember {
+    border-color: rgba(249, 115, 22, 0.3);
+  }
+
+  /* Animación Ken Burns para el carrusel */
+  @keyframes kenburns {
+    0% {
+      transform: scale(1);
+    }
+    100% {
+      transform: scale(1.08);
+    }
+  }
+
+  .animate-kenburns {
+    animation: kenburns 8s ease-out infinite alternate;
+  }
+}
+
+/* Efectos de luz/humo ambiental de fondo */
+.ember-glow {
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+}
