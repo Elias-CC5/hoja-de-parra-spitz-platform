@@ -1,0 +1,109 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.5rem;
+
+  /* Carbón cálido — fondo principal, oscuro tipo asador premium */
+  --background: #1A1512;
+  --foreground: #F2E9DD;
+
+  /* Marrón cuero/madera quemada — color de marca */
+  --primary: #5A2E1D;
+  --primary-foreground: #F2E9DD;
+
+  /* Brasa / naranja fuego — acento (CTAs, detalles calientes) */
+  --accent: #D9531E;
+  --accent-foreground: #1A1512;
+
+  --secondary: #2A2119;
+  --secondary-foreground: #F2E9DD;
+
+  --muted: #241D17;
+  --muted-foreground: #B8AA98;
+
+  --card: #211A15;
+  --card-foreground: #F2E9DD;
+
+  --popover: #211A15;
+  --popover-foreground: #F2E9DD;
+
+  --destructive: #B8321E;
+  --destructive-foreground: #F2E9DD;
+
+  --border: #3A2E22;
+  --input: #3A2E22;
+  --ring: #D9531E;
+}
+
+.dark {
+  --background: #100C0A;
+  --foreground: #F2E9DD;
+
+  --primary: #D9531E;
+  --primary-foreground: #100C0A;
+
+  --accent: #E8722E;
+  --accent-foreground: #100C0A;
+
+  --secondary: #221A14;
+  --secondary-foreground: #F2E9DD;
+
+  --muted: #1C1611;
+  --muted-foreground: #A69881;
+
+  --card: #17120E;
+  --card-foreground: #F2E9DD;
+
+  --popover: #17120E;
+  --popover-foreground: #F2E9DD;
+
+  --destructive: #C2431E;
+  --destructive-foreground: #100C0A;
+
+  --border: #2E241B;
+  --input: #2E241B;
+  --ring: #E8722E;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
