@@ -9,7 +9,13 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: { fullName: string; email: string; password: string; phone?: string }) => Promise<void>;
+  register: (data: {
+    fullName: string;
+    email: string;
+    password: string;
+    confirmPassword?: string; // Permitimos que reciba confirmPassword para que no marque error de tipos en React
+    phone?: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   fetchProfile: () => Promise<void>;
 }
@@ -46,7 +52,19 @@ export const useAuthStore = create<AuthState>()(
       register: async (payload) => {
         set({ isLoading: true });
         try {
-          const data = await api.post<never, AuthResponse>("/auth/register", payload);
+          // 1. Extraemos confirmPassword para NO enviarlo a NestJS (causa error 400 DTO)
+          const { confirmPassword, ...cleanPayload } = payload;
+
+          // 2. Sanitizamos el campo teléfono si viene vacío o con espacios
+          if (!cleanPayload.phone || cleanPayload.phone.trim() === "") {
+            delete cleanPayload.phone;
+          } else {
+            // Removemos espacios por si el usuario escribió "+51 987 654 321"
+            cleanPayload.phone = cleanPayload.phone.replace(/\s+/g, "");
+          }
+
+          // 3. Enviamos a la API solo lo que RegisterDto permite
+          const data = await api.post<never, AuthResponse>("/auth/register", cleanPayload);
           tokenStorage.setTokens(data.accessToken, data.refreshToken);
           set({ user: data.user, isAuthenticated: true, isLoading: false });
         } catch (error) {

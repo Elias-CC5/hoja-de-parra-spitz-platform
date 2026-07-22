@@ -5,7 +5,7 @@ import { Role } from '../../common/constants/role.enum';
 
 @Entity('users')
 export class User extends BaseEntity {
-  @Column({ length: 120 })
+  @Column({ name: 'full_name', length: 120 })
   fullName: string;
 
   @Index({ unique: true })
@@ -22,10 +22,12 @@ export class User extends BaseEntity {
   @Column({ type: 'enum', enum: Role, default: Role.CLIENTE })
   role: Role;
 
-  @Column({ default: true })
+  // 1. Mapeamos isActive a is_active
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @Column({ nullable: true })
+  // 2. Mapeamos refreshTokenHash a refresh_token_hash
+  @Column({ name: 'refresh_token_hash', nullable: true })
   @Exclude({ toPlainOnly: true })
   refreshTokenHash?: string;
 }
