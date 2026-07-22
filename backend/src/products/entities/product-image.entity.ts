@@ -7,10 +7,10 @@ export class ProductImage extends BaseEntity {
   @Column()
   url: string;
 
-  @Column()
-  publicId: string; // id de Cloudinary, para poder eliminarla
+  @Column({ nullable: true })
+  publicId?: string;
 
-  @Column({ default: 0 })
+  @Column({ default: 0 }) // 👈 ASEGÚRATE DE QUE ESTA LÍNEA EXISTA
   displayOrder: number;
 
   @ManyToOne(() => Product, (product) => product.images, { onDelete: 'CASCADE' })

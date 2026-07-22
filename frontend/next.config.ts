@@ -3,7 +3,14 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "res.cloudinary.com" },
+      {
+        protocol: "https",
+        hostname: "**", // 👈 Esto permite cargar imágenes de CUALQUIER dominio HTTPS sin volver a tirar error
+      },
+      {
+        protocol: "http",
+        hostname: "**",
+      },
     ],
   },
 };

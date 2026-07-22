@@ -13,6 +13,8 @@ import {
   Sparkles,
   Link as LinkIcon,
   FolderTree,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 
 const PLACEHOLDER_IMAGE = "/product-placeholder.svg";
@@ -22,7 +24,10 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+
+  // Modales
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -34,27 +39,46 @@ export default function AdminProductsPage() {
     isAvailable: true,
   });
 
-  const loadProducts = () => {
+  const loadProducts = async () => {
     setIsLoading(true);
-    adminService
-      .findAllProducts()
-      .then((data) => setProducts(data.items || []))
-      .catch(() => setProducts([]))
-      .finally(() => setIsLoading(false));
+    try {
+      // Intenta usar getProducts o findAllProducts según esté expuesto en adminService
+      const serviceMethod = adminService.getProducts || (adminService as any).findAllProducts;
+      if (!serviceMethod) {
+        throw new Error("El método para obtener productos no está definido en adminService");
+      }
+
+      const response = await serviceMethod();
+      // Soporta tanto arreglos directos como respuestas paginadas { items: [...] }
+      const list = Array.isArray(response) ? response : response?.items || [];
+      setProducts(list);
+    } catch (error) {
+      console.error("Error al cargar productos:", error);
+      setProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const loadCategories = () => {
     setIsLoadingCategories(true);
-    adminService
-      .findAllCategories()
-      .then((data) => {
-        const list = Array.isArray(data) ? data : [];
+    const serviceMethod = adminService.getCategories || (adminService as any).findAllCategories;
+    
+    if (!serviceMethod) {
+      setIsLoadingCategories(false);
+      return Promise.resolve([]);
+    }
+
+    return serviceMethod()
+      .then((data: any) => {
+        const list = Array.isArray(data) ? data : data?.items || [];
         setCategories(list);
-        if (list.length > 0 && !formData.category) {
-          setFormData((prev) => ({ ...prev, category: list[0].id }));
-        }
+        return list;
       })
-      .catch((err) => console.error("Error al cargar categorías:", err))
+      .catch((err: any) => {
+        console.error("Error al cargar categorías:", err);
+        return [];
+      })
       .finally(() => setIsLoadingCategories(false));
   };
 
@@ -62,17 +86,69 @@ export default function AdminProductsPage() {
     loadProducts();
   }, []);
 
-  const handleOpenModal = () => {
+  // Abrir Modal para Crear
+  const handleOpenCreateModal = async () => {
+    setEditingProduct(null);
+    const catList = await loadCategories();
+    setFormData({
+      name: "",
+      description: "",
+      price: "",
+      imageUrl: "",
+      category: catList.length > 0 ? catList[0].id : "",
+      isAvailable: true,
+    });
     setIsModalOpen(true);
-    loadCategories();
   };
 
+  // Abrir Modal para Editar
+  const handleOpenEditModal = async (product: any) => {
+    setEditingProduct(product);
+    await loadCategories();
+
+    // Extraer URL de la imagen sin importar la estructura que venga del backend
+    const currentImgUrl =
+      product.images?.[0]?.url ||
+      (typeof product.images?.[0] === "string" ? product.images[0] : "") ||
+      product.imageUrl ||
+      "";
+
+    // Extraer ID de la categoría
+    const currentCategoryId =
+      typeof product.category === "object"
+        ? product.category?.id
+        : product.categoryId || product.category || "";
+
+    setFormData({
+      name: product.name || "",
+      description: product.description || "",
+      price: product.price ? String(product.price) : "",
+      imageUrl: currentImgUrl,
+      category: currentCategoryId,
+      isAvailable: product.isAvailable ?? true,
+    });
+
+    setIsModalOpen(true);
+  };
+
+  // Eliminar Producto
+  const handleDeleteProduct = async (id: string, name: string) => {
+    if (!confirm(`¿Estás seguro de eliminar el producto "${name}"?`)) return;
+
+    try {
+      await adminService.deleteProduct(id);
+      loadProducts();
+    } catch (err: any) {
+      alert("Error al eliminar el producto.");
+    }
+  };
+
+  // Enviar Formulario (Crear o Actualizar)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // 📦 Payload limpio para cumplir con las reglas estrictas de NestJS
       const payload: any = {
         name: formData.name,
         description: formData.description.trim() || undefined,
@@ -81,34 +157,35 @@ export default function AdminProductsPage() {
         isAvailable: formData.isAvailable,
       };
 
-      // Si ingresó URL de imagen, la adjuntamos en el formato esperado
       if (formData.imageUrl.trim()) {
-        payload.images = [{ url: formData.imageUrl.trim() }];
+        payload.images = [
+          {
+            url: formData.imageUrl.trim(),
+            publicId: `url-${Date.now()}`,
+          },
+        ];
+      } else {
+        payload.images = [];
       }
 
-      await adminService.createProduct(payload);
+      if (editingProduct) {
+        // Modo Edición
+        await adminService.updateProduct(editingProduct.id, payload);
+      } else {
+        // Modo Creación
+        await adminService.createProduct(payload);
+      }
 
-      // Limpiar y cerrar modal
       setIsModalOpen(false);
-      setFormData({
-        name: "",
-        description: "",
-        price: "",
-        imageUrl: "",
-        category: categories.length > 0 ? categories[0].id : "",
-        isAvailable: true,
-      });
-
-      // Recargar lista
       loadProducts();
     } catch (err: any) {
-      console.error("Error al crear producto:", err?.response?.data || err);
+      console.error("Error al guardar producto:", err?.response?.data || err);
       const backendMessage = err?.response?.data?.message;
 
       alert(
         Array.isArray(backendMessage)
-          ? `Error de validación en Backend:\n- ${backendMessage.join("\n- ")}`
-          : backendMessage || "Error al crear el producto. Revisa los datos ingresados."
+          ? `Error de validación:\n- ${backendMessage.join("\n- ")}`
+          : backendMessage || "Error al procesar el producto."
       );
     } finally {
       setIsSubmitting(false);
@@ -130,7 +207,7 @@ export default function AdminProductsPage() {
         </div>
 
         <button
-          onClick={handleOpenModal}
+          onClick={handleOpenCreateModal}
           className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 px-5 py-2.5 text-xs font-bold text-neutral-950 shadow-[0_0_20px_rgba(251,191,36,0.25)] transition-all hover:scale-105"
         >
           <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
@@ -150,56 +227,85 @@ export default function AdminProductsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="group relative flex items-center gap-4 rounded-3xl border border-neutral-800/80 bg-neutral-950/80 p-4 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-amber-400/40 hover:bg-neutral-900/60"
-            >
-              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800">
-                <Image
-                  src={product.images?.[0]?.url ?? PLACEHOLDER_IMAGE}
-                  alt={product.name}
-                  fill
-                  unoptimized={true}
-                  className="object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-              </div>
+          {products.map((product: any) => {
+            // Resolver URL de imagen híbrida
+            const imageUrl =
+              product.images?.[0]?.url ||
+              (typeof product.images?.[0] === "string" ? product.images[0] : null) ||
+              product.imageUrl ||
+              PLACEHOLDER_IMAGE;
 
-              <div className="flex-1 min-w-0 space-y-1">
-                <h3 className="text-sm font-bold text-white truncate group-hover:text-amber-400 transition-colors">
-                  {product.name}
-                </h3>
-                <p className="text-xs font-semibold text-amber-400/90 font-mono">
-                  S/ {Number(product.price).toFixed(2)}
-                </p>
+            return (
+              <div
+                key={product.id}
+                className="group relative flex items-center gap-4 rounded-3xl border border-neutral-800/80 bg-neutral-950/80 p-4 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-amber-400/40 hover:bg-neutral-900/60"
+              >
+                {/* Imagen */}
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800">
+                  <Image
+                    src={imageUrl}
+                    alt={product.name}
+                    fill
+                    unoptimized={true}
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                </div>
 
-                <div className="pt-1">
-                  {product.isAvailable ? (
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-400/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-400/20">
-                      <CheckCircle2 className="h-3 w-3" />
-                      Disponible
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-400 border border-rose-500/20">
-                      <XCircle className="h-3 w-3" />
-                      Agotado
-                    </span>
-                  )}
+                {/* Detalles */}
+                <div className="flex-1 min-w-0 space-y-1">
+                  <h3 className="text-sm font-bold text-white truncate group-hover:text-amber-400 transition-colors">
+                    {product.name}
+                  </h3>
+                  <p className="text-xs font-semibold text-amber-400/90 font-mono">
+                    S/ {Number(product.price || 0).toFixed(2)}
+                  </p>
+
+                  <div className="pt-1 flex items-center justify-between">
+                    {product.isAvailable ? (
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-400/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-400/20">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Disponible
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-400 border border-rose-500/20">
+                        <XCircle className="h-3 w-3" />
+                        Agotado
+                      </span>
+                    )}
+
+                    {/* Botones de Acción */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleOpenEditModal(product)}
+                        title="Editar Producto"
+                        className="p-1.5 rounded-xl text-neutral-400 hover:text-amber-400 hover:bg-amber-400/10 transition"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id, product.name)}
+                        title="Eliminar Producto"
+                        className="p-1.5 rounded-xl text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Modal para Crear Producto */}
+      {/* Modal Crear / Editar Producto */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg rounded-3xl border border-neutral-800 bg-neutral-950 p-6 shadow-2xl space-y-6">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-amber-400" />
-                Crear Nuevo Producto
+                {editingProduct ? "Editar Producto" : "Crear Nuevo Producto"}
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -213,7 +319,7 @@ export default function AdminProductsPage() {
               {/* Nombre */}
               <div>
                 <label className="block text-xs font-bold text-neutral-300 mb-1">
-                  Nombre del Producto
+                  Nombre del Producto *
                 </label>
                 <input
                   type="text"
@@ -225,22 +331,17 @@ export default function AdminProductsPage() {
                 />
               </div>
 
-              {/* Categoría y Precio en 2 columnas */}
+              {/* Categoría y Precio */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Selector de Categorías */}
                 <div>
                   <label className="block text-xs font-bold text-neutral-300 mb-1 flex items-center gap-1.5">
                     <FolderTree className="h-3.5 w-3.5 text-amber-400" />
-                    Categoría
+                    Categoría *
                   </label>
                   {isLoadingCategories ? (
                     <div className="flex items-center gap-2 py-2.5 px-4 rounded-2xl border border-neutral-800 bg-neutral-900/50 text-xs text-neutral-500">
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-400" />
                       Cargando...
-                    </div>
-                  ) : categories.length === 0 ? (
-                    <div className="text-[11px] text-amber-400/90 bg-amber-400/10 p-2.5 rounded-2xl border border-amber-400/20">
-                      No hay categorías disponibles.
                     </div>
                   ) : (
                     <select
@@ -249,19 +350,21 @@ export default function AdminProductsPage() {
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="w-full rounded-2xl border border-neutral-800 bg-neutral-900/50 px-4 py-2.5 text-xs text-white outline-none focus:border-amber-400"
                     >
+                      <option value="" disabled className="bg-neutral-950 text-neutral-500">
+                        Selecciona una categoría
+                      </option>
                       {categories.map((cat) => (
                         <option key={cat.id} value={cat.id} className="bg-neutral-950 text-white">
-                          {cat.name} ({cat.type})
+                          {cat.name}
                         </option>
                       ))}
                     </select>
                   )}
                 </div>
 
-                {/* Precio */}
                 <div>
                   <label className="block text-xs font-bold text-neutral-300 mb-1">
-                    Precio (S/)
+                    Precio (S/) *
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-2.5 text-xs font-bold text-amber-400">
@@ -296,7 +399,7 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <p className="text-[10px] text-neutral-500 mt-1">
-                  Pega el enlace directo de la foto del producto.
+                  Debe ser un enlace directo a la imagen (ej: Unsplash, Imgur, Cloudinary, etc.).
                 </p>
               </div>
 
@@ -314,6 +417,20 @@ export default function AdminProductsPage() {
                 />
               </div>
 
+              {/* Disponibilidad */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="isAvailable"
+                  checked={formData.isAvailable}
+                  onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
+                  className="h-4 w-4 rounded accent-amber-400 cursor-pointer"
+                />
+                <label htmlFor="isAvailable" className="text-xs text-neutral-300 cursor-pointer select-none">
+                  Producto disponible en carta
+                </label>
+              </div>
+
               {/* Acciones */}
               <div className="flex items-center gap-3 pt-2">
                 <button
@@ -325,10 +442,14 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting || categories.length === 0}
+                  disabled={isSubmitting}
                   className="w-1/2 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2.5 text-xs font-bold text-neutral-950 transition-transform hover:scale-[1.02] disabled:opacity-50"
                 >
-                  {isSubmitting ? "Guardando..." : "Guardar Producto"}
+                  {isSubmitting
+                    ? "Guardando..."
+                    : editingProduct
+                    ? "Actualizar Producto"
+                    : "Guardar Producto"}
                 </button>
               </div>
             </form>

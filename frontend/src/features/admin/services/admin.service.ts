@@ -22,6 +22,9 @@ export interface CreateProductDto {
   images?: { url: string }[];
 }
 
+// 📦 DTO para actualizar productos (hace que todos los campos sean opcionales)
+export type UpdateProductDto = Partial<CreateProductDto>;
+
 // 🏷️ Interfaces para Categorías
 export interface Category {
   id: string;
@@ -54,8 +57,11 @@ export const adminService = {
     api.patch<never, Reservation>(`/reservations/${id}/status`, { status }),
   findAllProducts: () => api.get<never, { items: Product[] }>("/products", { params: { limit: 100 } }),
 
-  // 🛠️ Ya podemos usar la ruta relativa /products limpia
+  // 🛠️ Productos
   createProduct: (data: CreateProductDto) => api.post<never, Product>("/products", data),
+  
+  // ✏️ Método para actualizar el producto (PATCH)
+  updateProduct: (id: string, data: UpdateProductDto) => api.patch<never, Product>(`/products/${id}`, data),
 
   deleteProduct: (id: string) => api.delete<never, void>(`/products/${id}`),
 

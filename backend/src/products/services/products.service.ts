@@ -29,8 +29,8 @@ export class ProductsService {
     private readonly categoriesRepository: Repository<Category>,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
-  
-async create(dto: CreateProductDto): Promise<Product> {
+
+  async create(dto: CreateProductDto): Promise<Product> {
     const slug = slugify(dto.name);
 
     const existing = await this.productsRepository.findOne({ where: { slug } });
@@ -58,7 +58,6 @@ async create(dto: CreateProductDto): Promise<Product> {
     }
 
     // 💡 FALLBACK DE SEGURIDAD PARA CATEGORY_ID:
-    // Si la categoría enviada no existe, asignamos la primera categoría de la base de datos.
     if (!categoryId) {
       const firstCategory = await this.categoriesRepository.findOne({ where: {} });
       if (!firstCategory) {
@@ -78,15 +77,17 @@ async create(dto: CreateProductDto): Promise<Product> {
       ...productData,
       type: finalType,
       slug,
-      categoryId, // 👈 Garantizamos que nunca sea null/undefined
+      categoryId,
     } as unknown as Partial<Product>);
 
     const savedProduct = (await this.productsRepository.save(product)) as unknown as Product;
 
+    // Insertar imágenes si existen
     if (images && images.length > 0) {
       const imageEntities = images.map((img, index) =>
         this.productImagesRepository.create({
           url: img.url,
+          publicId: (img as any).publicId || null,
           displayOrder: index,
           productId: savedProduct.id,
         }),
@@ -95,9 +96,8 @@ async create(dto: CreateProductDto): Promise<Product> {
     }
 
     return this.findById(savedProduct.id);
-  
-  
   }
+
   async findAll(query: QueryProductsDto): Promise<PaginatedResult<Product>> {
     const page = query.page && query.page > 0 ? query.page : 1;
     const limit = query.limit && query.limit > 0 ? query.limit : 12;
@@ -181,12 +181,52 @@ async create(dto: CreateProductDto): Promise<Product> {
   async update(id: string, dto: UpdateProductDto): Promise<Product> {
     const product = await this.findById(id);
 
+    // Actualizar slug si cambia el nombre
     if (dto.name && dto.name !== product.name) {
       product.slug = slugify(dto.name);
     }
 
-    Object.assign(product, dto);
-    return this.productsRepository.save(product);
+    const { category, images, ...updateData } = dto as any;
+
+    // Manejo de categoría si viene en la actualización
+    if (category) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(category);
+      if (isUuid) {
+        product.categoryId = category;
+      } else {
+        const foundCat = await this.categoriesRepository.findOne({
+          where: [{ slug: category }, { name: category }],
+        });
+        if (foundCat) {
+          product.categoryId = foundCat.id;
+        }
+      }
+    }
+
+    // Copiar resto de propiedades
+    Object.assign(product, updateData);
+    await this.productsRepository.save(product);
+
+    // Manejo y reemplazo de imágenes si vienen en la actualización
+    if (images && Array.isArray(images)) {
+      // Eliminar imágenes antiguas asociadas a este producto
+      await this.productImagesRepository.delete({ productId: product.id });
+
+      // Insertar nuevas imágenes
+      if (images.length > 0) {
+        const imageEntities = images.map((img: any, index: number) =>
+          this.productImagesRepository.create({
+            url: img.url,
+            publicId: img.publicId || null,
+            displayOrder: index,
+            productId: product.id,
+          }),
+        );
+        await this.productImagesRepository.save(imageEntities);
+      }
+    }
+
+    return this.findById(product.id);
   }
 
   async addImage(

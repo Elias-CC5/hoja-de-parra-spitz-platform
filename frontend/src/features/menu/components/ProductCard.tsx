@@ -20,6 +20,7 @@ export function ProductCard({ product }: { product: Product }) {
           src={product.images?.[0]?.url ?? PLACEHOLDER_IMAGE}
           alt={product.name}
           fill
+          unoptimized={true}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
         {product.isFeatured && (
