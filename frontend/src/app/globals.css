@@ -36,6 +36,10 @@
   --border: #3A2E22;
   --input: #3A2E22;
   --ring: #D9531E;
+
+  /* Fallback de fuentes por si las variables de next/font no llegan a cargar */
+  --font-fraunces: "Georgia", "Times New Roman", serif;
+  --font-inter: system-ui, -apple-system, sans-serif;
 }
 
 .dark {
@@ -107,32 +111,225 @@ body {
 h1, h2, h3, .font-display {
   font-family: var(--font-display), Georgia, serif;
 }
-@layer utilities {
-  /* Sombras y resplandores temáticos de brasas */
-  .shadow-ember {
-    box-shadow: 0 0 25px -5px rgba(234, 88, 12, 0.3);
-  }
-  
-  .border-ember {
-    border-color: rgba(249, 115, 22, 0.3);
-  }
 
-  /* Animación Ken Burns para el carrusel */
-  @keyframes kenburns {
-    0% {
-      transform: scale(1);
-    }
-    100% {
-      transform: scale(1.08);
-    }
-  }
+/* ============================================
+   COVERFLOW 3D — profundidad + reflejo espejo
+   ============================================ */
 
-  .animate-kenburns {
-    animation: kenburns 8s ease-out infinite alternate;
-  }
+.coverflow-perspective {
+  perspective: 2000px;
+  perspective-origin: 50% 30%;
 }
 
-/* Efectos de luz/humo ambiental de fondo */
-.ember-glow {
-  background: radial-gradient(circle, rgba(234, 88, 12, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+.coverflow-stage {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 6%, black 100%);
+  mask-image: linear-gradient(to bottom, transparent, black 6%, black 100%);
+}
+
+@keyframes coverflow-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.333%); }
+}
+
+.animate-coverflow {
+  width: max-content;
+  animation: coverflow-scroll 55s linear infinite;
+  transform-style: preserve-3d;
+}
+
+.coverflow-card-wrap {
+  margin-left: -18px;
+  transform-style: preserve-3d;
+}
+.coverflow-card-wrap:first-child { margin-left: 0; }
+
+.coverflow-card {
+  transform: rotateY(24deg) translateZ(-40px) scale(0.92);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease, box-shadow 0.6s ease;
+  filter: brightness(0.6) saturate(0.85);
+  will-change: transform;
+  transform-origin: center;
+}
+
+.animate-coverflow > .coverflow-card-wrap:nth-child(odd) .coverflow-card {
+  transform: rotateY(-24deg) translateZ(-40px) scale(0.92);
+}
+
+.coverflow-card-wrap:hover .coverflow-card {
+  transform: rotateY(0deg) scale(1.08) translateZ(60px) !important;
+  filter: brightness(1) saturate(1.1);
+  z-index: 30;
+  box-shadow: 0 30px 60px -15px rgba(249, 115, 22, 0.4), 0 0 0 1px rgba(251, 191, 36, 0.25);
+}
+
+/* Reflejo espejo: la misma imagen, invertida y desvanecida */
+.coverflow-reflection {
+  position: relative;
+  transform: scaleY(-1) rotateY(24deg) translateZ(-40px) scale(0.92);
+  opacity: 0.25;
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 65%);
+  mask-image: linear-gradient(to bottom, black, transparent 65%);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.animate-coverflow > .coverflow-card-wrap:nth-child(odd) .coverflow-reflection {
+  transform: scaleY(-1) rotateY(-24deg) translateZ(-40px) scale(0.92);
+}
+
+.coverflow-card-wrap:hover .coverflow-reflection {
+  opacity: 0.4;
+  transform: scaleY(-1) rotateY(0deg) scale(1.08) translateZ(60px);
+}
+
+/* ============================================
+   TEXTO Y BRASAS — gradiente animado + partículas
+   ============================================ */
+
+.ember-text {
+  background: linear-gradient(90deg, #fbbf24, #f97316, #ea580c, #f97316, #fbbf24);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ember-shift 6s ease-in-out infinite;
+}
+
+@keyframes ember-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.ember-field { overflow: hidden; }
+
+.ember {
+  position: absolute;
+  bottom: -20px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fbbf24 0%, #f97316 60%, transparent 100%);
+  box-shadow: 0 0 8px 2px rgba(249, 115, 22, 0.6);
+  animation: ember-rise linear infinite;
+  opacity: 0;
+}
+
+@keyframes ember-rise {
+  0% { transform: translateY(0) translateX(0) scale(0.6); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 0.7; }
+  100% { transform: translateY(-100vh) translateX(var(--drift, 20px)) scale(1.1); opacity: 0; }
+}
+
+.ember-0 { left: 5%;  --drift: 30px;  width: 3px; height: 3px; animation-duration: 9s;  animation-delay: 0s; }
+.ember-1 { left: 15%; --drift: -20px; width: 5px; height: 5px; animation-duration: 12s; animation-delay: 1.5s; }
+.ember-2 { left: 28%; --drift: 15px;  width: 3px; height: 3px; animation-duration: 8s;  animation-delay: 3s; }
+.ember-3 { left: 45%; --drift: -25px; width: 4px; height: 4px; animation-duration: 11s; animation-delay: 0.5s; }
+.ember-4 { left: 62%; --drift: 20px;  width: 6px; height: 6px; animation-duration: 13s; animation-delay: 2s; }
+.ember-5 { left: 78%; --drift: -15px; width: 3px; height: 3px; animation-duration: 9s;  animation-delay: 4s; }
+.ember-6 { left: 90%; --drift: 25px;  width: 4px; height: 4px; animation-duration: 10s; animation-delay: 1s; }
+
+/* ============================================
+   TOQUE EMOCIONAL — pulso de calor + CTA con fuego
+   ============================================ */
+
+.heat-pulse {
+  animation: heat-breathe 5s ease-in-out infinite;
+}
+
+@keyframes heat-breathe {
+  0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.08); }
+}
+
+.cta-pulse {
+  position: relative;
+}
+
+.cta-pulse::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #fbbf24, #f97316, #fbbf24);
+  z-index: -1;
+  opacity: 0.5;
+  filter: blur(8px);
+  animation: cta-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes cta-glow {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-coverflow,
+  .ember,
+  .ember-text,
+  .heat-pulse,
+  .cta-pulse::before {
+    animation: none !important;
+  }
+}
+/* ============================================
+   HERO ESTILO "FOOD MENU" — grunge real + llamas + flotantes
+   ============================================ */
+
+.grunge-title {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #f4ede2;
+  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+/* Capa de textura grunge superpuesta al texto usando feTurbulence */
+.grunge-overlay {
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background: #000;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: url(#grunge-noise);
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.float-item {
+  animation: float-updown 4.5s ease-in-out infinite;
+}
+
+@keyframes float-updown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+}
+
+.flame-glow {
+  filter: blur(1px) drop-shadow(0 0 30px rgba(249, 115, 22, 0.4));
+}
+
+.flame-path {
+  transform-origin: bottom center;
+  animation: flame-flicker 3s ease-in-out infinite;
+}
+
+.flame-1 { animation-duration: 3.2s; }
+.flame-2 { animation-duration: 2.6s; animation-delay: 0.4s; }
+
+@keyframes flame-flicker {
+  0%, 100% { transform: scaleY(1) scaleX(1) translateY(0); opacity: 0.95; }
+  25% { transform: scaleY(1.06) scaleX(0.96) translateY(-6px); opacity: 1; }
+  50% { transform: scaleY(0.94) scaleX(1.04) translateY(3px); opacity: 0.88; }
+  75% { transform: scaleY(1.04) scaleX(0.97) translateY(-3px); opacity: 0.97; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-item,
+  .flame-path {
+    animation: none !important;
+  }
 }

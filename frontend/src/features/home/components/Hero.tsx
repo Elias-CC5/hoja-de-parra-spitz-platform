@@ -1,202 +1,127 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Flame, Award, Calendar, Users, Star } from "lucide-react";
+import Link from "next/link";
+import { Star, CalendarCheck, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Imágenes HD reales de Unsplash optimizadas para parrilla y catering
-const SLIDES = [
-  {
-    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1920&auto=format&fit=crop",
-    alt: "Cortes de carne premium a las brasas",
-    subtitle: "Sabor Ahumado Auténtico",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1920&auto=format&fit=crop",
-    alt: "Costillar a la parrilla con acabado perfecto",
-    subtitle: "Catering de Alta Gama",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?q=80&w=1920&auto=format&fit=crop",
-    alt: "Banquete y buffet corporativo preparado al aire libre",
-    subtitle: "Eventos Inolvidables",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=1920&auto=format&fit=crop",
-    alt: "Mesa servida para evento exclusivo",
-    subtitle: "Atención Exclusiva",
-  },
+const ITEMS = [
+  { image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=600&auto=format&fit=crop", title: "Cortes Premium", subtitle: "A las Brasas" },
+  { image: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&auto=format&fit=crop", title: "Costillares Ahumados", subtitle: "Cocción Lenta" },
+  { image: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?q=80&w=600&auto=format&fit=crop", title: "Catering Corporativo", subtitle: "Eventos de Empresa" },
+  { image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=600&auto=format&fit=crop", title: "Banquetes & Buffet", subtitle: "Mesas Servidas" },
+  { image: "https://images.unsplash.com/photo-1558030006-450675393462?q=80&w=600&auto=format&fit=crop", title: "Parrilladas Privadas", subtitle: "Servicio Exclusivo" },
+  { image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=600&auto=format&fit=crop", title: "Coffee Break & Box Lunch", subtitle: "Sabor de Autor" },
+  { image: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&auto=format&fit=crop", title: "Eventos Especiales", subtitle: "Atención Exclusiva" },
 ];
 
+const MARQUEE_ITEMS = [...ITEMS, ...ITEMS, ...ITEMS];
+
 export function Hero() {
-  const [current, setCurrent] = useState(0);
-
-  const next = useCallback(() => {
-    setCurrent((prev) => (prev + 1) % SLIDES.length);
-  }, []);
-
-  const prev = useCallback(() => {
-    setCurrent((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
-  }, []);
-
-  useEffect(() => {
-    const timer = setInterval(next, 7000);
-    return () => clearInterval(timer);
-  }, [next]);
-
   return (
-    <section className="relative h-[94vh] min-h-[680px] w-full overflow-hidden bg-stone-950 text-white selection:bg-orange-500 selection:text-white">
-      {/* 1. Carrusel de imágenes con efecto Ken Burns */}
-      {SLIDES.map((slide, index) => (
-        <div
-          key={slide.image}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            index === current ? "opacity-100 z-0" : "opacity-0 -z-10"
-          }`}
-        >
-          <Image
-            src={slide.image}
-            alt={slide.alt}
-            fill
-            priority={index === 0}
-            className={`object-cover object-center ${index === current ? "animate-kenburns" : ""}`}
-            sizes="100vw"
-            unoptimized // Permite cargar URLs externas de Unsplash directamente
-          />
-        </div>
-      ))}
+    <section className="relative w-full overflow-hidden bg-[#0c0a09] text-stone-100 pt-32 pb-0 flex flex-col">
+      {/* Resplandor cálido de fondo */}
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[900px] h-[300px] bg-amber-600/10 blur-[150px] pointer-events-none rounded-full" />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1100px] h-[400px] bg-orange-700/15 blur-[140px] pointer-events-none rounded-full z-0" />
 
-      {/* 2. Capas de sobreposición (Overlays cinemáticos) */}
-      <div className="absolute inset-0 bg-gradient-to-r from-stone-950/90 via-stone-950/70 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/40 to-stone-950/30" />
-      <div className="ember-glow absolute -bottom-20 -left-20 h-[500px] w-[500px] rounded-full pointer-events-none" />
-
-      {/* 3. Contenido Principal */}
-      <div className="relative mx-auto flex h-full max-w-7xl items-center px-6 sm:px-8 lg:px-12">
-        <div className="max-w-2xl pt-12">
-          
-          {/* Insignia / Badge de calidad */}
-          <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-orange-500/30 bg-stone-900/80 px-4 py-2 backdrop-blur-md shadow-ember">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-500 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-orange-500" />
-            </span>
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-orange-400 flex items-center gap-1.5">
-              <Flame className="h-3.5 w-3.5 text-orange-500 fill-orange-500" />
-              Catering Premium & Fuego Real
-            </span>
-          </div>
-
-          {/* Titular Principal */}
-          <h1 className="font-serif text-4xl font-bold leading-[1.08] text-stone-100 sm:text-6xl lg:text-7xl tracking-tight">
-            Cada mesa cuenta <br />
-            <span className="bg-gradient-to-r from-amber-200 via-orange-400 to-amber-500 bg-clip-text italic text-transparent">
-              una historia
-            </span>
-          </h1>
-
-          {/* Bajada de texto */}
-          <p className="mt-6 text-base sm:text-lg text-stone-300/90 leading-relaxed max-w-xl font-light">
-            Especialistas en buffet, coffee break, box lunch y banquetes ejecutivos. 
-            Llevamos la mística del asado tradicional y la alta cocina a tu empresa o celebración.
-          </p>
-
-          {/* Botones de Acción (CTAs) */}
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link href="/menu">
-              <Button
-                size="lg"
-                className="h-13 px-8 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-semibold rounded-xl shadow-lg shadow-orange-950/50 border border-orange-400/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-orange-600/20"
-              >
-                Explorar Menú
-              </Button>
-            </Link>
-            <Link href="/cotizar">
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-13 px-8 border-stone-600 bg-stone-900/60 text-stone-200 hover:bg-stone-800/80 hover:text-white hover:border-stone-400 backdrop-blur-md font-medium rounded-xl transition-all duration-300"
-              >
-                Cotizar Evento
-              </Button>
-            </Link>
-          </div>
-
-          {/* Métricas / Social Proof */}
-          <div className="mt-12 grid grid-cols-3 gap-6 border-t border-stone-800/80 pt-6">
-            <div>
-              <p className="font-serif text-2xl sm:text-3xl font-bold text-amber-400">+500</p>
-              <p className="text-xs font-medium uppercase tracking-wider text-stone-400 mt-1">
-                Eventos Realizados
-              </p>
-            </div>
-            <div>
-              <p className="font-serif text-2xl sm:text-3xl font-bold text-amber-400">15</p>
-              <p className="text-xs font-medium uppercase tracking-wider text-stone-400 mt-1">
-                Años de Experiencia
-              </p>
-            </div>
-            <div>
-              <p className="font-serif text-2xl sm:text-3xl font-bold text-amber-400">100%</p>
-              <p className="text-xs font-medium uppercase tracking-wider text-stone-400 mt-1">
-                Sabor a las Brasas
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* 4. Controles de Navegación del Carrusel */}
-      <div className="absolute right-6 bottom-12 z-20 flex items-center gap-3 sm:right-12">
-        <button
-          onClick={prev}
-          aria-label="Anterior"
-          className="flex h-12 w-12 items-center justify-center rounded-full border border-stone-700/60 bg-stone-900/60 text-stone-300 backdrop-blur-md transition-all hover:bg-orange-600 hover:text-white hover:border-orange-500"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <button
-          onClick={next}
-          aria-label="Siguiente"
-          className="flex h-12 w-12 items-center justify-center rounded-full border border-stone-700/60 bg-stone-900/60 text-stone-300 backdrop-blur-md transition-all hover:bg-orange-600 hover:text-white hover:border-orange-500"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </button>
-      </div>
-
-      {/* Indicadores de diapositiva (Dots) */}
-      <div className="absolute bottom-8 left-6 sm:left-12 z-20 flex items-center gap-2">
-        {SLIDES.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrent(index)}
-            aria-label={`Diapositiva ${index + 1}`}
-            className={`h-2 rounded-full transition-all duration-500 ${
-              index === current
-                ? "w-10 bg-gradient-to-r from-orange-500 to-amber-500"
-                : "w-2 bg-stone-700 hover:bg-stone-500"
-            }`}
-          />
+      {/* Partículas de brasa flotando */}
+      <div className="ember-field pointer-events-none absolute inset-0 z-[1]">
+        {Array.from({ length: 14 }).map((_, i) => (
+          <span key={i} className={`ember ember-${i % 7}`} />
         ))}
       </div>
 
-      {/* 5. Tarjeta flotante interactiva (Sello de Garantía) */}
-      <div className="absolute bottom-12 right-36 z-10 hidden lg:flex items-center gap-4 rounded-2xl border border-amber-500/20 bg-stone-900/80 p-4 shadow-2xl backdrop-blur-xl">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/20 text-orange-400">
-          <Award className="h-6 w-6" />
+      {/* Grid sutil de fondo */}
+      <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(var(--accent)_1px,transparent_1px),linear-gradient(90deg,var(--accent)_1px,transparent_1px)] bg-[size:56px_56px] pointer-events-none" />
+
+      {/* --- TEXTOS PRINCIPALES (compacto) --- */}
+      <div className="relative z-10 mx-auto max-w-3xl px-6 text-center">
+        <div className="inline-flex items-center gap-3 rounded-full border border-stone-800 bg-stone-900/90 px-4 py-1.5 backdrop-blur-md mb-5 shadow-2xl animate-in fade-in slide-in-from-top-3 duration-700">
+          
+          <div className="flex items-center gap-1.5 text-xs text-stone-300">
+            <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />          </div>
         </div>
-        <div>
-          <div className="flex items-center gap-1 text-amber-400">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="h-3.5 w-3.5 fill-amber-400" />
-            ))}
+
+        {/* Nombre de marca, chico y elegante arriba del título */}
+        <p className="font-display text-sm sm:text-base uppercase tracking-[0.3em] text-amber-400/90 mb-3 animate-in fade-in duration-700">
+          Hoja de Parra <span className="text-stone-500">·</span> Spitz
+        </p>
+
+        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-[1.15] animate-in fade-in slide-in-from-bottom-4 duration-700">
+          Sabor a brasas{" "}
+          <span className="font-sans italic font-light ember-text">inolvidable</span>
+        </h1>
+
+        <div className="mt-6 flex items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
+          <Link href="/cotizar">
+            <Button size="lg" className="h-11 px-6 bg-white hover:bg-stone-200 text-stone-950 font-semibold rounded-full shadow-2xl transition-all duration-300 hover:scale-105">
+              <CalendarCheck className="mr-2 h-4 w-4 text-amber-600" />
+              Cotizar Mi Evento
+            </Button>
+          </Link>
+          <Link href="/menu">
+            <Button size="lg" variant="outline" className="h-11 px-6 border-stone-800 bg-stone-900/60 text-stone-300 hover:bg-stone-800 hover:text-white rounded-full backdrop-blur-md transition-transform duration-300 hover:scale-105">
+              <Flame className="mr-2 h-4 w-4 text-amber-500" />
+              Ver Menú
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* --- COVERFLOW 3D con reflejo tipo espejo --- */}
+      <div className="relative z-10 mt-12 w-full">
+        {/* Spotlight central detrás de las cards */}
+        <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-b from-amber-500/15 via-orange-600/5 to-transparent blur-[100px] pointer-events-none" />
+
+        <div className="coverflow-stage relative w-full overflow-hidden py-14 group/stage">
+          <div className="absolute left-0 top-0 z-30 h-full w-24 sm:w-56 bg-gradient-to-r from-[#0c0a09] via-[#0c0a09]/90 to-transparent pointer-events-none" />
+          <div className="absolute right-0 top-0 z-30 h-full w-24 sm:w-56 bg-gradient-to-l from-[#0c0a09] via-[#0c0a09]/90 to-transparent pointer-events-none" />
+
+          <div className="coverflow-perspective">
+            <div className="animate-coverflow group-hover/stage:[animation-play-state:paused] flex items-center">
+              {MARQUEE_ITEMS.map((item, index) => (
+                <div key={index} className="coverflow-card-wrap shrink-0">
+                  <div className="coverflow-card relative h-[280px] w-[210px] sm:h-[360px] sm:w-[260px] overflow-hidden rounded-3xl border border-stone-800/80 bg-stone-900 shadow-2xl group cursor-pointer">
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      unoptimized
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/25 to-transparent opacity-85 group-hover:opacity-95 transition-opacity" />
+                    <div className="absolute inset-0 ring-1 ring-inset ring-amber-500/0 group-hover:ring-amber-500/50 rounded-3xl transition-all duration-500" />
+                    <div className="absolute bottom-6 left-6 right-6 z-10">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
+                        {item.subtitle}
+                      </span>
+                      <h3 className="text-lg font-bold text-white leading-snug mt-1">
+                        {item.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  {/* Reflejo espejo debajo de la card */}
+                  <div
+                    className="coverflow-reflection h-[280px] w-[210px] sm:h-[360px] sm:w-[260px] rounded-3xl overflow-hidden mt-1"
+                    aria-hidden="true"
+                  >
+                    <Image
+                      src={item.image}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <p className="text-xs font-semibold text-stone-200 mt-1">Calidad Grill Certificada</p>
-          <p className="text-[10px] text-stone-400">Carnes seleccionadas & sazón de autor</p>
         </div>
+
+        {/* Piso degradado que absorbe el reflejo */}
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-b from-transparent to-[#0c0a09] pointer-events-none z-20" />
       </div>
     </section>
   );
