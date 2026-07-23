@@ -91,6 +91,67 @@ h1, h2, h3, .font-display {
 }
 
 /* ============================================
+   CARD SWAP MEJORADO (Premium Luxury & Interactivo)
+   ============================================ */
+.card-swap-container {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+  right: auto !important;
+  transform: none !important;
+
+  perspective: 1200px;
+  overflow: visible;
+  margin: 0 auto;
+}
+
+.card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 24px !important;
+  border: 1px solid rgba(251, 191, 36, 0.3) !important;
+  background: #121212 !important;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  
+  /* Sombras multi-capa y resplandor estilo brasas */
+  box-shadow: 
+    0 30px 60px -15px rgba(0, 0, 0, 0.9),
+    0 0 30px rgba(245, 158, 11, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  border-color: rgba(251, 191, 36, 0.6) !important;
+  box-shadow: 
+    0 35px 70px -15px rgba(0, 0, 0, 0.95),
+    0 0 40px rgba(245, 158, 11, 0.35),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+}
+
+@media (max-width: 1024px) {
+  .card-swap-container {
+    transform: scale(0.85) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .card-swap-container {
+    transform: scale(0.7) !important;
+  }
+}
+
+/* ============================================
    COVERFLOW 3D
    ============================================ */
 .coverflow-perspective {
@@ -343,13 +404,6 @@ h1, h2, h3, .font-display {
 .step-card:nth-child(3) { animation-delay: 0.25s; }
 .step-card:nth-child(4) { animation-delay: 0.35s; }
 
-/* Accesibilidad */
-@media (prefers-reduced-motion: reduce) {
-  .animate-coverflow, .ember, .ember-text, .heat-pulse, 
-  .cta-pulse::before, .float-item, .flame-path, .step-card {
-    animation: none !important;
-  }
-}
 /* ==========================================================================
    ESTILOS PREMIUM - DEPARRASPITZ MENU
    ========================================================================== */
@@ -397,6 +451,7 @@ h1, h2, h3, .font-display {
   background: rgba(28, 29, 33, 0.9);
   box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
 }
+
 /* ==========================================================================
    Efectos y Estilos para la Vista de Detalle de Producto
    ========================================================================== */
@@ -432,6 +487,7 @@ h1, h2, h3, .font-display {
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
 }
+
 /* ==========================================================================
    ANIMACIONES Y ESTILOS DE TARJETA GASTRONÓMICA
    ========================================================================== */
@@ -480,114 +536,81 @@ h1, h2, h3, .font-display {
   box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
 }
 
-/* ============================================================
-   ScrollStack — componente de tarjetas apiladas al hacer scroll
-   ============================================================ */
-
-.scroll-stack-scroller {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: visible;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  transform: translateZ(0);
-  will-change: scroll-position;
+/* ===== HERO: entrada escalonada ===== */
+@keyframes hero-reveal-in {
+  from { opacity: 0; transform: translateY(22px); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0);     filter: blur(0); }
+}
+.hero-reveal {
+  animation: hero-reveal-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--delay, 0ms);
 }
 
-.scroll-stack-inner {
-  padding: 20vh 5rem 50rem;
-  min-height: 100vh;
+/* Glow ambiental respirando */
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.08); }
 }
+.hero-glow-a { animation: glow-breathe 8s ease-in-out infinite; }
+.hero-glow-b { animation: glow-breathe 10s ease-in-out infinite reverse; }
 
-/* Contenedor usado cuando useWindowScroll=true (sin scroll interno propio) */
-.scroll-stack-window {
-  position: relative;
-  width: 100%;
-}
-
-.scroll-stack-card {
-  transform-origin: top center;
-  will-change: transform, filter;
-  backface-visibility: hidden;
-  transform-style: preserve-3d;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-  position: relative;
-  transform: translateZ(0);
-}
-
-.scroll-stack-end {
-  width: 100%;
-  height: 1px;
-}
-
-/* ============================================================
-   MenuHero — partículas de brasa (ember) y ajustes de ScrollStack
-   ============================================================ */
-
-/* Texto con degradado ámbar para "Gastronómica" en el <h1> */
-.ember-text {
-  background: linear-gradient(90deg, #fbbf24, #f97316);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Contenedor de partículas flotantes */
-.ember-field {
-  overflow: hidden;
-}
-
+/* Partículas de brasa: una sola regla, todo lo variable viene por --i inline */
 .ember {
   position: absolute;
-  bottom: -10px;
-  width: 3px;
-  height: 3px;
+  bottom: -20px;
+  left: calc(var(--i, 0) * 12%);
+  width: calc(3px + (var(--i, 0) % 3) * 1px);
+  aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, #fbbf24 0%, #f97316 70%, transparent 100%);
+  background: radial-gradient(circle, #FEF08A 0%, var(--primary) 60%, transparent 100%);
+  box-shadow: 0 0 8px 2px rgba(250, 204, 21, 0.6);
   opacity: 0;
-  animation: ember-rise 6s ease-in infinite;
+  animation: ember-rise calc(7s + var(--i, 0) * 0.6s) ease-in infinite;
+  animation-delay: calc(var(--i, 0) * 0.4s);
 }
-
-.ember-0 { left: 8%;  animation-delay: 0s;   }
-.ember-1 { left: 18%; animation-delay: 0.8s; }
-.ember-2 { left: 30%; animation-delay: 1.6s; }
-.ember-3 { left: 45%; animation-delay: 2.4s; }
-.ember-4 { left: 58%; animation-delay: 3.2s; }
-.ember-5 { left: 72%; animation-delay: 4s;   }
-.ember-6 { left: 88%; animation-delay: 4.8s; }
 
 @keyframes ember-rise {
-  0% {
-    transform: translateY(0) scale(0.6);
-    opacity: 0;
-  }
-  15% {
-    opacity: 0.9;
-  }
-  90% {
-    opacity: 0.2;
-  }
-  100% {
-    transform: translateY(-420px) scale(1.1);
-    opacity: 0;
-  }
+  0%   { opacity: 0;    transform: translate(0, 0) scale(0.6); }
+  10%  { opacity: 1; }
+  50%  { transform: translate(18px, -55vh) scale(1); }
+  90%  { opacity: 0.4; }
+  100% { opacity: 0;    transform: translate(-12px, -95vh) scale(0.3); }
 }
 
+/* Stack de cards: perspectiva 3D real + parallax por mouse */
+.hero-stage { perspective: 1400px; }
 
-.menu-hero-stack-card {
-  padding: 0;
-  border-radius: 1.5rem;
-  overflow: hidden;
+.hero-stage-inner {
+  transform-style: preserve-3d;
+  transform:
+    translate3d(var(--tx, 0px), var(--ty, 0px), 0)
+    rotateX(var(--rx, 0deg))
+    rotateY(var(--ry, 0deg));
+  transition: transform 0.15s ease-out;
+  will-change: transform;
 }
 
-.scroll-stack-window .scroll-stack-card {
-  max-width: 860px;   /* antes: 680px */
-  margin-left: auto;
-  margin-right: auto;
+/* Sheen que cruza la card existente (.card) al hover — no duplica bordes/sombras */
+.card-sheen {
+  background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.12) 35%, transparent 50%);
+  background-size: 250% 250%;
+  background-position: -100% -100%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.card:hover .card-sheen {
+  opacity: 1;
+  animation: sheen-sweep 1.1s ease forwards;
+}
+@keyframes sheen-sweep {
+  from { background-position: -100% -100%; }
+  to   { background-position: 100% 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-reveal, .hero-glow-a, .hero-glow-b, .ember, .card-sheen {
+    animation: none !important;
+    transition: none !important;
+  }
+  .hero-stage-inner { transform: none !important; }
 }
