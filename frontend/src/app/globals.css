@@ -479,3 +479,115 @@ h1, h2, h3, .font-display {
 .btn-amber-glow:hover {
   box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
 }
+
+/* ============================================================
+   ScrollStack — componente de tarjetas apiladas al hacer scroll
+   ============================================================ */
+
+.scroll-stack-scroller {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: visible;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+.scroll-stack-inner {
+  padding: 20vh 5rem 50rem;
+  min-height: 100vh;
+}
+
+/* Contenedor usado cuando useWindowScroll=true (sin scroll interno propio) */
+.scroll-stack-window {
+  position: relative;
+  width: 100%;
+}
+
+.scroll-stack-card {
+  transform-origin: top center;
+  will-change: transform, filter;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  position: relative;
+  transform: translateZ(0);
+}
+
+.scroll-stack-end {
+  width: 100%;
+  height: 1px;
+}
+
+/* ============================================================
+   MenuHero — partículas de brasa (ember) y ajustes de ScrollStack
+   ============================================================ */
+
+/* Texto con degradado ámbar para "Gastronómica" en el <h1> */
+.ember-text {
+  background: linear-gradient(90deg, #fbbf24, #f97316);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Contenedor de partículas flotantes */
+.ember-field {
+  overflow: hidden;
+}
+
+.ember {
+  position: absolute;
+  bottom: -10px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fbbf24 0%, #f97316 70%, transparent 100%);
+  opacity: 0;
+  animation: ember-rise 6s ease-in infinite;
+}
+
+.ember-0 { left: 8%;  animation-delay: 0s;   }
+.ember-1 { left: 18%; animation-delay: 0.8s; }
+.ember-2 { left: 30%; animation-delay: 1.6s; }
+.ember-3 { left: 45%; animation-delay: 2.4s; }
+.ember-4 { left: 58%; animation-delay: 3.2s; }
+.ember-5 { left: 72%; animation-delay: 4s;   }
+.ember-6 { left: 88%; animation-delay: 4.8s; }
+
+@keyframes ember-rise {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  90% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: translateY(-420px) scale(1.1);
+    opacity: 0;
+  }
+}
+
+
+.menu-hero-stack-card {
+  padding: 0;
+  border-radius: 1.5rem;
+  overflow: hidden;
+}
+
+.scroll-stack-window .scroll-stack-card {
+  max-width: 860px;   /* antes: 680px */
+  margin-left: auto;
+  margin-right: auto;
+}
