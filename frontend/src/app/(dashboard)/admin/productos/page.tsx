@@ -43,7 +43,7 @@ export default function AdminProductsPage() {
     setIsLoading(true);
     try {
       // Intenta usar getProducts o findAllProducts según esté expuesto en adminService
-      const serviceMethod = adminService.getProducts || (adminService as any).findAllProducts;
+const serviceMethod = (adminService as any).getProducts || (adminService as any).findAllProducts;
       if (!serviceMethod) {
         throw new Error("El método para obtener productos no está definido en adminService");
       }
@@ -62,7 +62,7 @@ export default function AdminProductsPage() {
 
   const loadCategories = () => {
     setIsLoadingCategories(true);
-    const serviceMethod = adminService.getCategories || (adminService as any).findAllCategories;
+const serviceMethod = (adminService as any).getCategories || (adminService as any).findAllCategories;
     
     if (!serviceMethod) {
       setIsLoadingCategories(false);
