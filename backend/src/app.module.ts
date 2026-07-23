@@ -1,7 +1,9 @@
+// backend/src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
+// ⚙️ CONFIGURACIONES DE ENTORNO (Habían sido omitidas)
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
@@ -10,18 +12,21 @@ import culqiConfig from './config/culqi.config';
 import mailConfig from './config/mail.config';
 import { envValidationSchema } from './config/env.validation';
 
+// 🛡️ INFRAESTRUCTURA & COMMON
 import { DatabaseModule } from './database/database.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
+// 👤 AUTENTICACIÓN Y USUARIOS
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { UsersModule } from './users/users.module';
 
-// 🚀 IMPORTACIONES DE DOMINIO
-import { CategoriesModule } from './categories/categories.module'; // 👈 IMPORTANTE
+// 🚀 MÓDULOS DE DOMINIO
+import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -44,9 +49,10 @@ import { UploadsModule } from './uploads/uploads.module';
     // Módulos de dominio activos
     AuthModule,
     UsersModule,
-    CategoriesModule, // 👈 1. Agrégalo aquí antes de ProductsModule
-    ProductsModule,   // 👈 2. Ya no lanzará el error de "Entity metadata for Product#category was not found"
+    CategoriesModule,
+    ProductsModule,
     UploadsModule,
+    CartModule, // 👈 Carrito listo
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
