@@ -4,7 +4,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Loader2, 
+  MapPin, 
+  Calendar, 
+  Users, 
+  FileText, 
+  CreditCard, 
+  CheckCircle2, 
+  AlertCircle, 
+  ShoppingBag,
+  ArrowRight
+} from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,93 +72,233 @@ export function CheckoutForm() {
     }
   };
 
+  // --- ESTADO: PAGO EXITOSO ---
   if (step === "success") {
     return (
-      <div className="rounded-lg border border-border bg-card p-10 text-center">
-        <h2 className="font-display text-2xl font-medium">¡Pago confirmado!</h2>
-        <p className="mt-2 text-muted-foreground">
-          Tu pedido fue registrado correctamente. Te contactaremos para coordinar la entrega.
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="rounded-2xl border border-emerald-500/30 bg-neutral-900/60 p-8 text-center backdrop-blur-xl shadow-2xl"
+      >
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4">
+          <CheckCircle2 className="h-10 w-10" />
+        </div>
+        <h2 className="font-display text-2xl font-bold text-white">¡Pago Confirmado!</h2>
+        <p className="mt-2 text-sm text-neutral-400 max-w-md mx-auto">
+          Tu pedido fue registrado con éxito. Nos pondremos en contacto contigo pronto para coordinar los detalles.
         </p>
-        <Button className="mt-6" onClick={() => router.push("/perfil")}>
+        <Button 
+          className="mt-6 bg-amber-400 font-semibold text-neutral-950 hover:bg-amber-300 transition-colors"
+          onClick={() => router.push("/perfil")}
+        >
           Ver mis pedidos
         </Button>
-      </div>
+      </motion.div>
     );
   }
 
+  // --- ESTADO: CARRITO VACÍO ---
   if (!summary || summary.cart.items.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card p-10 text-center text-muted-foreground">
-        Tu carrito está vacío. Agrega productos antes de continuar con el pago.
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-12 text-center text-neutral-400 backdrop-blur-md"
+      >
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-neutral-800/80 text-neutral-500 mb-3">
+          <ShoppingBag className="h-7 w-7" />
+        </div>
+        <p className="text-base font-medium text-neutral-300">Tu carrito está vacío</p>
+        <p className="text-xs text-neutral-500 mt-1">Agrega productos del menú antes de finalizar tu compra.</p>
+        <Button 
+          variant="outline" 
+          className="mt-5 border-neutral-700 text-neutral-300 hover:bg-neutral-800"
+          onClick={() => router.push("/menu")}
+        >
+          Ir a la carta
+        </Button>
+      </motion.div>
     );
   }
 
+  // --- FORMULARIO PRINCIPAL ---
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <div className="space-y-2">
-        <Label htmlFor="deliveryAddress">Dirección de entrega</Label>
-        <Input id="deliveryAddress" placeholder="Dirección completa" {...register("deliveryAddress")} />
-        {errors.deliveryAddress && (
-          <p className="text-sm text-destructive">{errors.deliveryAddress.message}</p>
-        )}
-      </div>
+    <motion.form 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      onSubmit={handleSubmit(onSubmit)} 
+      className="grid gap-8 lg:grid-cols-12"
+    >
+      {/* COLUMNA IZQUIERDA: Formulario de Datos (7 Cols) */}
+      <div className="space-y-6 lg:col-span-7">
+        <div className="rounded-2xl border border-neutral-800/80 bg-neutral-900/40 p-6 backdrop-blur-md space-y-5">
+          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-amber-400" />
+            Detalles de Entrega
+          </h2>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="eventDate">Fecha de entrega</Label>
-          <Input id="eventDate" type="date" {...register("eventDate")} />
-          {errors.eventDate && <p className="text-sm text-destructive">{errors.eventDate.message}</p>}
+          {/* Dirección */}
+          <div className="space-y-2">
+            <Label htmlFor="deliveryAddress" className="text-xs font-medium text-neutral-300">
+              Dirección de entrega
+            </Label>
+            <div className="relative">
+              <Input 
+                id="deliveryAddress" 
+                placeholder="Ej. Av. Primavera 123, Dpto 402 - Surco" 
+                className="bg-neutral-950/60 border-neutral-800 focus:border-amber-400/50 text-white pl-9 h-11 transition-all"
+                {...register("deliveryAddress")} 
+              />
+              <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-neutral-500" />
+            </div>
+            {errors.deliveryAddress && (
+              <p className="text-xs text-red-400 flex items-center gap-1 mt-1">
+                <AlertCircle className="h-3 w-3" /> {errors.deliveryAddress.message}
+              </p>
+            )}
+          </div>
+
+          {/* Fecha y Personas */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="eventDate" className="text-xs font-medium text-neutral-300">
+                Fecha del evento / entrega
+              </Label>
+              <div className="relative">
+                <Input 
+                  id="eventDate" 
+                  type="date" 
+                  className="bg-neutral-950/60 border-neutral-800 focus:border-amber-400/50 text-white pl-9 h-11 transition-all [color-scheme:dark]"
+                  {...register("eventDate")} 
+                />
+                <Calendar className="absolute left-3 top-3.5 h-4 w-4 text-neutral-500" />
+              </div>
+              {errors.eventDate && (
+                <p className="text-xs text-red-400 flex items-center gap-1 mt-1">
+                  <AlertCircle className="h-3 w-3" /> {errors.eventDate.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="numberOfPeople" className="text-xs font-medium text-neutral-300">
+                N° de comensales / personas
+              </Label>
+              <div className="relative">
+                <Input 
+                  id="numberOfPeople" 
+                  type="number" 
+                  min={1} 
+                  placeholder="10"
+                  className="bg-neutral-950/60 border-neutral-800 focus:border-amber-400/50 text-white pl-9 h-11 transition-all"
+                  {...register("numberOfPeople")} 
+                />
+                <Users className="absolute left-3 top-3.5 h-4 w-4 text-neutral-500" />
+              </div>
+              {errors.numberOfPeople && (
+                <p className="text-xs text-red-400 flex items-center gap-1 mt-1">
+                  <AlertCircle className="h-3 w-3" /> {errors.numberOfPeople.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Notas Adicionales */}
+          <div className="space-y-2">
+            <Label htmlFor="notes" className="text-xs font-medium text-neutral-300">
+              Indicaciones especiales o notas (opcional)
+            </Label>
+            <div className="relative">
+              <textarea
+                id="notes"
+                rows={3}
+                placeholder="Ej. Timbre malogrado, restricciones alimenticias, etc."
+                className="w-full rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-sm text-white placeholder:text-neutral-600 focus:border-amber-400/50 focus:outline-none transition-all"
+                {...register("notes")}
+              />
+            </div>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="numberOfPeople">Número de personas</Label>
-          <Input id="numberOfPeople" type="number" min={1} {...register("numberOfPeople")} />
-          {errors.numberOfPeople && (
-            <p className="text-sm text-destructive">{errors.numberOfPeople.message}</p>
+
+        {/* Mensaje de Error si falla la API */}
+        <AnimatePresence>
+          {errorMessage && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400"
+            >
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <span>{errorMessage}</span>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notas adicionales (opcional)</Label>
-        <textarea
-          id="notes"
-          rows={3}
-          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
-          {...register("notes")}
-        />
+      {/* COLUMNA DERECHA: Resumen de Pago (5 Cols) */}
+      <div className="space-y-6 lg:col-span-5">
+        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 backdrop-blur-xl shadow-xl space-y-5">
+          <h3 className="text-base font-semibold text-white flex items-center justify-between border-b border-neutral-800/80 pb-4">
+            <span>Resumen del Pedido</span>
+            <span className="text-xs text-neutral-400 font-normal">
+              {summary.cart.items.length} {summary.cart.items.length === 1 ? "ítem" : "ítems"}
+            </span>
+          </h3>
+
+          {/* Desglose de Precios */}
+          <div className="space-y-3 text-sm text-neutral-400">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span className="text-neutral-200">S/ {summary.subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>IGV (18%)</span>
+              <span className="text-neutral-200">S/ {summary.tax.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Costo de Envío</span>
+              <span className="text-emerald-400 font-medium">
+                {summary.shipping === 0 ? "Gratis" : `S/ ${summary.shipping.toFixed(2)}`}
+              </span>
+            </div>
+
+            <div className="border-t border-neutral-800 pt-3 flex justify-between items-baseline">
+              <span className="font-semibold text-white">Total a pagar</span>
+              <span className="font-display text-2xl font-bold text-amber-400">
+                S/ {summary.total.toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          {/* Botón Principal de Pago */}
+          <Button
+            type="submit"
+            size="lg"
+            className="group w-full h-12 bg-gradient-to-r from-amber-400 to-amber-500 text-neutral-950 font-bold hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-lg shadow-amber-500/10 rounded-xl flex items-center justify-center gap-2"
+            disabled={isSubmitting || step === "processing"}
+          >
+            {(isSubmitting || step === "processing") ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Procesando pedido...</span>
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-5 w-5" />
+                <span>Pagar con tarjeta (Culqi)</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </>
+            )}
+          </Button>
+
+          <p className="text-[11px] text-center text-neutral-500 flex items-center justify-center gap-1">
+            🔒 Procesado de forma segura mediante Culqi
+          </p>
+        </div>
       </div>
-
-      {errorMessage && <p className="text-sm text-destructive">{errorMessage}</p>}
-
-      <div className="rounded-lg border border-border bg-secondary/40 p-5">
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Subtotal</span>
-          <span>S/ {summary.subtotal.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>IGV (18%)</span>
-          <span>S/ {summary.tax.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Envío</span>
-          <span>{summary.shipping === 0 ? "Gratis" : `S/ ${summary.shipping.toFixed(2)}`}</span>
-        </div>
-        <div className="mt-2 flex justify-between border-t border-border pt-2 font-display text-lg font-medium">
-          <span>Total</span>
-          <span>S/ {summary.total.toFixed(2)}</span>
-        </div>
-      </div>
-
-      <Button
-        type="submit"
-        size="lg"
-        className="w-full"
-        disabled={isSubmitting || step === "processing"}
-      >
-        {(isSubmitting || step === "processing") && <Loader2 className="animate-spin" />}
-        Pagar con tarjeta (Culqi)
-      </Button>
-    </form>
+    </motion.form>
   );
 }
