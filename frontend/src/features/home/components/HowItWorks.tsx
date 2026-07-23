@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { Flame, Utensils, ChefHat, ArrowRight } from "lucide-react";
 
 // Datos con imágenes por URL directa (Unsplash)
@@ -15,7 +15,8 @@ const SERVICES = [
     subtitle: "EVENTOS CORPORATIVOS · REUNIONES FAMILIARES",
     description:
       "Carnes selectas a la parrilla, anticuchos, chorizo parrillero y guarniciones tradicionales.",
-    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1000&q=80",
+    image:
+      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1000&q=80",
   },
   {
     number: "02",
@@ -26,7 +27,8 @@ const SERVICES = [
     subtitle: "BODAS · EVENTOS TEMÁTICOS",
     description:
       "Shawarma, falafel, hummus, tabule y panes árabes recién horneados.",
-    image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80",
+    image:
+      "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80",
   },
   {
     number: "03",
@@ -37,28 +39,30 @@ const SERVICES = [
     subtitle: "CUMPLEAÑOS · CELEBRACIONES ÍNTIMAS",
     description:
       "Ají de gallina, lomo saltado, arroz con pollo y postres tradicionales.",
-    image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80", // Puedes cambiar esta URL por la imagen que prefieras
+    image:
+      "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80",
   },
 ];
 
+// --- VARIANTES DE ANIMACIÓN TIPADAS CORRECTAMENTE ---
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.2 },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] },
+  },
+};
+
 export function BuffetServices() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2 },
-    },
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] },
-    },
-  };
-
   return (
     <section className="relative overflow-hidden bg-[#0c0a09] py-28 text-stone-100">
       {/* Resplandor ambiental de fondo */}

@@ -3,14 +3,14 @@ import { IsEmail, IsOptional, IsPhoneNumber, IsString, MinLength } from 'class-v
 export class RegisterDto {
   @IsString()
   @MinLength(2)
-  fullName: string;
+  fullName!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
-  password: string;
+  password!: string;
 
   @IsOptional()
   @IsPhoneNumber('PE')
