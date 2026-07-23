@@ -9,7 +9,15 @@ interface Payment {
 }
 
 export const checkoutService = {
-  createOrder: (dto: CheckoutFormValues) => api.post<never, Order>("/orders/checkout", dto),
-  payOrder: (orderId: string, culqiToken: string, email: string) =>
-    api.post<never, Payment>("/payments/charge", { orderId, culqiToken, email }),
+  createOrder: async (dto: CheckoutFormValues): Promise<Order> => {
+    // Si tu instancia de Axios "api" NO tiene un interceptor que extraiga response.data,
+    // asegúrate de retornar la propiedad .data
+    const response = await api.post<Order>("/orders/checkout", dto);
+    return response.data ?? response; 
+  },
+  
+  payOrder: async (orderId: string, culqiToken: string, email: string): Promise<Payment> => {
+    const response = await api.post<Payment>("/payments/charge", { orderId, culqiToken, email });
+    return response.data ?? response;
+  },
 };

@@ -8,9 +8,11 @@ import type { AuthenticatedUser } from '../../auth/interfaces/authenticated-user
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Role } from '../../common/constants/role.enum';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard'; // 👈 1. IMPORTAR JWT GUARD
 
 @ApiTags('Orders')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard) // 👈 2. PROTEGER TODO EL CONTROLADOR CON JWT
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}

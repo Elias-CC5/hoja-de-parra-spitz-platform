@@ -138,7 +138,7 @@ export function CartDrawer() {
                         <div className="flex justify-between gap-2">
                           <div>
                             <p className="text-sm font-semibold text-white line-clamp-1">
-                              {item.product?.name ?? item.name}
+                              {item.product?.name ?? (item as any).name ?? "Producto"}
                             </p>
                             <p className="text-xs font-bold text-amber-400 mt-0.5">
                               S/ {Number(item.unitPrice ?? item.product?.price ?? 0).toFixed(2)}

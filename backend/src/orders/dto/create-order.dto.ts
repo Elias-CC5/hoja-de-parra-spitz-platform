@@ -3,14 +3,14 @@ import { IsDateString, IsInt, IsOptional, IsString, Min, MinLength } from 'class
 export class CreateOrderDto {
   @IsString()
   @MinLength(5)
-  deliveryAddress: string;
+  deliveryAddress!: string;
 
   @IsDateString()
-  eventDate: string;
+  eventDate!: string;
 
   @IsInt()
   @Min(1)
-  numberOfPeople: number;
+  numberOfPeople!: number;
 
   @IsOptional()
   @IsString()
