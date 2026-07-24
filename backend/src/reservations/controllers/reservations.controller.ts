@@ -8,9 +8,11 @@ import type { AuthenticatedUser } from '../../auth/interfaces/authenticated-user
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Role } from '../../common/constants/role.enum';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard'; // 👈 1. IMPORTAR JWT GUARD
 
 @ApiTags('Reservations')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard) // 👈 2. AGREGAR GUARD AQUÍ PARA PROTEGER LAS RUTAS DE USUARIO
 @Controller('reservations')
 export class ReservationsController {
   constructor(private readonly reservationsService: ReservationsService) {}

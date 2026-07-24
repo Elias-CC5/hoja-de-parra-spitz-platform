@@ -1,23 +1,24 @@
-import { IsDateString, IsEnum, IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
-import { EventType } from '../../services-catalog/entities/catering-service.entity';
+import { IsString, IsNotEmpty, IsInt, IsDateString, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateReservationDto {
+  @IsString()
+  @IsNotEmpty()
+  eventType!: string;
+
   @IsDateString()
-  eventDate: string;
+  eventDate!: string;
 
   @IsString()
-  eventTime: string;
+  eventTime!: string;
 
+  @Type(() => Number) 
   @IsInt()
-  @Min(1)
-  numberOfPeople: number;
-
-  @IsEnum(EventType)
-  eventType: EventType;
+  numberOfPeople!: number;
 
   @IsString()
-  @MinLength(5)
-  address: string;
+  @IsNotEmpty()
+  address!: string;
 
   @IsOptional()
   @IsString()

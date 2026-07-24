@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Reservation, ReservationStatus } from '../entities/reservation.entity';
+import { Reservation } from '../entities/reservation.entity';
 import { CreateReservationDto } from '../dto/create-reservation.dto';
 
 @Injectable()
@@ -12,45 +12,55 @@ export class ReservationsService {
   ) {}
 
   async create(userId: string, dto: CreateReservationDto): Promise<Reservation> {
-    const reservation = this.reservationsRepository.create({
-      ...dto,
-      userId,
-      status: ReservationStatus.PENDIENTE,
-    });
-    return this.reservationsRepository.save(reservation);
-  }
+    const newReservation = this.reservationsRepository.create({
+      ...(dto as any),
+      user: { id: userId },
+    } as Partial<Reservation>);
 
-  async findAll(): Promise<Reservation[]> {
-    return this.reservationsRepository.find({ order: { eventDate: 'ASC' } });
+    return await this.reservationsRepository.save(newReservation);
   }
 
   async findByUser(userId: string): Promise<Reservation[]> {
-    return this.reservationsRepository.find({
-      where: { userId },
-      order: { eventDate: 'ASC' },
+    return await this.reservationsRepository.find({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
     });
   }
 
   async findById(id: string): Promise<Reservation> {
-    const reservation = await this.reservationsRepository.findOne({ where: { id } });
-    if (!reservation) {
-      throw new NotFoundException('Reserva no encontrada');
-    }
-    return reservation;
-  }
+    const reservation = await this.reservationsRepository.findOne({
+      where: { id },
+      relations: { user: true },
+    });
 
-  async updateStatus(id: string, status: ReservationStatus): Promise<Reservation> {
-    const reservation = await this.findById(id);
-    reservation.status = status;
-    return this.reservationsRepository.save(reservation);
+    if (!reservation) {
+      throw new NotFoundException(`Reserva con ID ${id} no encontrada`);
+    }
+
+    return reservation;
   }
 
   async cancel(id: string, userId: string): Promise<Reservation> {
     const reservation = await this.findById(id);
-    if (reservation.userId !== userId) {
-      throw new NotFoundException('Reserva no encontrada');
+
+    if (reservation.user?.id !== userId) {
+      throw new NotFoundException('No tienes permiso para cancelar esta reserva');
     }
-    reservation.status = ReservationStatus.CANCELADA;
-    return this.reservationsRepository.save(reservation);
+
+    (reservation as any).status = 'CANCELADO';
+    return await this.reservationsRepository.save(reservation);
+  }
+
+  async findAll(): Promise<Reservation[]> {
+    return await this.reservationsRepository.find({
+      relations: { user: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async updateStatus(id: string, status: any): Promise<Reservation> {
+    const reservation = await this.findById(id);
+    (reservation as any).status = status;
+    return await this.reservationsRepository.save(reservation);
   }
 }

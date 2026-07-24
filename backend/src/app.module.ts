@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
-// ⚙️ CONFIGURACIONES DE ENTORNO (Habían sido omitidas)
+// ⚙️ CONFIGURACIONES DE ENTORNO
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
@@ -12,21 +12,19 @@ import culqiConfig from './config/culqi.config';
 import mailConfig from './config/mail.config';
 import { envValidationSchema } from './config/env.validation';
 
-// 🛡️ INFRAESTRUCTURA & COMMON
 import { DatabaseModule } from './database/database.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
-// 👤 AUTENTICACIÓN Y USUARIOS
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { UsersModule } from './users/users.module';
 
-// 🚀 MÓDULOS DE DOMINIO
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { CartModule } from './cart/cart.module';
+import { ReservationsModule } from './reservations/reservations.module'; // 👈 1. IMPORTAR MÓDULO AQUÍ
 
 @Module({
   imports: [
@@ -52,7 +50,8 @@ import { CartModule } from './cart/cart.module';
     CategoriesModule,
     ProductsModule,
     UploadsModule,
-    CartModule, // 👈 Carrito listo
+    CartModule,
+    ReservationsModule, // 👈 2. AGREGAR MÓDULO AL ARRAY DE IMPORTS
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
