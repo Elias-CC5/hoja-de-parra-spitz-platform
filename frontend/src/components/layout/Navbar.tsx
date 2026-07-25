@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { 
-  ChevronDown, 
-  ChefHat, 
-  Moon, 
-  ShoppingBag, 
-  User as UserIcon, 
-  LogOut, 
-  Menu, 
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronDown,
+  ChefHat,
+  ShoppingBag,
+  User as UserIcon,
+  LogOut,
+  Menu,
   X,
   ShieldCheck,
-  LayoutDashboard
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/auth.store";
@@ -23,8 +23,8 @@ import { useUiStore } from "@/store/ui.store";
 const NAV_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/menu", label: "Menú" },
-  { href: "/servicios", label: "Reservas" },
-  { href: "/cotizar", label: "Cotizar evento" },
+  { href: "/servicios", label: "Servicios" },
+  { href: "/cotizar", label: "Cotizar" },
 ];
 
 export function Navbar() {
@@ -37,16 +37,10 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuBtnRef = useRef<HTMLButtonElement>(null);
 
   const itemCount = summary?.cart?.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
-
-  // Verificar en consola los datos del usuario para depuración
-  useEffect(() => {
-    if (user) {
-      console.log("🔥 Navbar User Data:", user);
-      console.log("🔥 User Role:", user?.role);
-    }
-  }, [user]);
+  const isAdmin = user?.role ? String(user.role).toLowerCase().includes("admin") : false;
 
   useEffect(() => {
     if (isAuthenticated) fetchCart();
@@ -55,262 +49,333 @@ export function Navbar() {
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Cerrar el dropdown al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setIsUserMenuOpen(false);
       }
     };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsUserMenuOpen(false);
+        userMenuBtnRef.current?.focus();
+      }
+    };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
+
+  useEffect(() => {
+    closeMobileMenu();
+    setIsUserMenuOpen(false);
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogout = async () => {
     setIsUserMenuOpen(false);
     await logout();
   };
 
-  // Comprobación segura de si el usuario es Admin
-  const isAdmin = user?.role ? String(user.role).toLowerCase().includes("admin") : false;
-
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
-      <div
-        className={`relative flex w-full max-w-6xl items-center justify-between gap-4 rounded-full border border-neutral-800/90 bg-neutral-950/90 px-4 py-2.5 backdrop-blur-2xl transition-all duration-300 ${
-          scrolled ? "shadow-2xl shadow-black/60 border-neutral-700/80" : "shadow-lg shadow-black/30"
+      <motion.div
+        initial={{ y: -24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className={`relative flex w-full max-w-5xl items-center justify-between gap-4 rounded-2xl border px-3 py-2 transition-all duration-300 ${
+          scrolled
+            ? "border-white/[0.08] bg-[#0c0c0d]/90 shadow-[0_8px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur-2xl"
+            : "border-white/[0.06] bg-[#141416]/60 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.4)] backdrop-blur-xl"
         }`}
       >
-        {/* LOGO & BRAND */}
-        <Link
-          href="/"
-          className="group relative flex shrink-0 items-center gap-3 rounded-full px-1 focus:outline-none"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-neutral-950 shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-transform group-hover:scale-105">
-            <ChefHat className="h-5 w-5 stroke-[2.2]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-serif text-lg font-bold tracking-tight text-white leading-none">
-              DeParra<span className="text-amber-400">Spitz</span>
-            </span>
-            <span className="mt-1 text-[9px] font-bold tracking-widest text-amber-500 uppercase">
-              Catering & Eventos
-            </span>
-          </div>
-        </Link>
+        {/* hairline top sheen for depth */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-amber-200/25 to-transparent"
+        />
 
-        {/* NAVEGACIÓN CENTRAL */}
-        <nav className="hidden items-center gap-1 md:flex">
+        {/* NAVEGACIÓN IZQUIERDA */}
+        <nav aria-label="Navegación principal" className="hidden items-center gap-0.5 md:flex">
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`relative rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
-                  isActive
-                    ? "bg-amber-400 text-neutral-950 shadow-[0_0_20px_rgba(251,191,36,0.4)] scale-105"
-                    : "text-neutral-300 hover:text-white hover:bg-neutral-900/80"
+                aria-current={isActive ? "page" : undefined}
+                className={`relative rounded-xl px-3.5 py-1.5 text-[13px] font-medium tracking-tight transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-300/50 ${
+                  isActive ? "text-white" : "text-neutral-400 hover:text-neutral-100"
                 }`}
               >
-                {link.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="navbar-active-pill"
+                    className="absolute inset-0 rounded-xl border border-amber-300/10 bg-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                    transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                  />
+                )}
+                <span className="relative z-10">{link.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* CONTROLES DERECHA */}
-        <div className="relative flex shrink-0 items-center gap-2">
-          {/* Botón Modo Noche */}
-          <button
-            aria-label="Cambiar tema"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-900 text-amber-400 border border-neutral-800 transition-colors hover:bg-neutral-800 hover:text-amber-300"
+        {/* LOGO / MARCA */}
+        <Link
+          href="/"
+          className="group relative flex items-center gap-2 rounded-full px-1 text-white focus-visible:outline-none"
+        >
+          <motion.span
+            whileHover={{ rotate: -6, scale: 1.06 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-amber-300/20 to-amber-500/10 ring-1 ring-inset ring-amber-200/15"
           >
-            <Moon className="h-4 w-4" />
-          </button>
+            <ChefHat className="h-3.5 w-3.5 stroke-[2.25] text-amber-200" />
+          </motion.span>
+          <span className="font-sans text-[13px] font-semibold tracking-[0.01em] text-white">
+            DeParra<span className="text-amber-200">Spitz</span>
+          </span>
+        </Link>
 
-          <div className="h-4 w-px bg-neutral-800 mx-0.5 hidden sm:block" />
-
-          {/* MENÚ DE USUARIO AUTENTICADO */}
+        {/* CONTROLES DERECHA */}
+        <div className="relative flex shrink-0 items-center gap-1.5">
           {isAuthenticated ? (
             <div className="relative" ref={userMenuRef}>
-              <button
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900/80 px-3 py-1.5 text-sm font-medium text-neutral-200 transition-all hover:border-neutral-700 hover:bg-neutral-800 hover:text-white"
+              <motion.button
+                ref={userMenuBtnRef}
+                type="button"
+                whileTap={{ scale: 0.96 }}
+                onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                aria-haspopup="menu"
+                aria-expanded={isUserMenuOpen}
+                className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.04] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:border-white/[0.1] hover:bg-white/[0.08]"
               >
-                <UserIcon className="h-4 w-4 text-amber-400" />
-                <span className="max-w-[110px] truncate">{user?.fullName || "Mi Cuenta"}</span>
-                <ChevronDown className={`h-3.5 w-3.5 text-neutral-400 transition-transform duration-200 ${isUserMenuOpen ? "rotate-180" : ""}`} />
-              </button>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10">
+                  <UserIcon className="h-3 w-3 text-neutral-300" />
+                </span>
+                <span className="max-w-[100px] truncate">{user?.fullName || "Cuenta"}</span>
+                <ChevronDown
+                  className={`h-3 w-3 text-neutral-500 transition-transform duration-200 ${
+                    isUserMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </motion.button>
 
-              {/* DROPDOWN MENU */}
-              {isUserMenuOpen && (
-                <div className="absolute right-0 mt-3 w-56 animate-in fade-in zoom-in-95 duration-150 rounded-2xl border border-neutral-800 bg-neutral-950 p-2 shadow-2xl shadow-black/80 backdrop-blur-2xl">
-                  {/* Encabezado con Info de Usuario */}
-                  <div className="px-3 py-2 border-b border-neutral-800/80">
-                    <p className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase">
-                      Sesión Activa
-                    </p>
-                    <p className="text-sm font-semibold text-white truncate mt-0.5">
-                      {user?.fullName}
-                    </p>
-                    
-                    {/* Badge de Administrador */}
-                    {isAdmin && (
-                      <span className="inline-flex items-center gap-1 mt-1.5 rounded-full bg-amber-400/10 px-2.5 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-400/20">
-                        <ShieldCheck className="h-3 w-3" /> Administrador
-                      </span>
-                    )}
-                  </div>
+              <AnimatePresence>
+                {isUserMenuOpen && (
+                  <motion.div
+                    role="menu"
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute right-0 mt-3 w-60 origin-top-right overflow-hidden rounded-2xl border border-white/[0.08] bg-[#161618] shadow-[0_20px_60px_-12px_rgba(0,0,0,0.7)] backdrop-blur-2xl"
+                  >
+                    <div className="bg-white/[0.02] px-4 py-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                        Sesión activa
+                      </p>
+                      <p className="mt-1 truncate text-[13px] font-semibold text-white">
+                        {user?.fullName}
+                      </p>
+                      {isAdmin && (
+                        <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-300/20 bg-amber-300/10 px-2 py-0.5 text-[10px] font-bold text-amber-200">
+                          <ShieldCheck className="h-3 w-3" /> Administrador
+                        </span>
+                      )}
+                    </div>
 
-                  {/* Opciones del Menú */}
-                  <div className="py-1">
-                    {/* Botón exclusivo para Admin */}
-                    {isAdmin && (
+                    <div className="h-px bg-white/[0.06]" />
+
+                    <div className="p-1.5">
+                      {isAdmin && (
+                        <Link
+                          role="menuitem"
+                          href="/admin"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="mb-1 flex items-center gap-2.5 rounded-xl bg-amber-300/[0.08] px-3 py-2 text-[12px] font-semibold text-amber-200 transition-colors hover:bg-amber-300 hover:text-neutral-950"
+                        >
+                          <LayoutDashboard className="h-4 w-4" />
+                          Panel admin
+                        </Link>
+                      )}
                       <Link
-                        href="/admin"
+                        role="menuitem"
+                        href="/perfil"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl bg-amber-400/10 px-3 py-2 text-sm font-bold text-amber-400 transition-colors hover:bg-amber-400 hover:text-neutral-950 my-1"
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-[12px] font-medium text-neutral-300 transition-colors hover:bg-white/[0.06] hover:text-white"
                       >
-                        <LayoutDashboard className="h-4 w-4" />
-                        Panel Admin
+                        <UserIcon className="h-4 w-4 text-neutral-500" />
+                        Mi perfil
                       </Link>
-                    )}
+                    </div>
 
-                    <Link
-                      href="/perfil"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-900 hover:text-white"
-                    >
-                      <UserIcon className="h-4 w-4 text-neutral-400" />
-                      Mi Perfil
-                    </Link>
-                  </div>
+                    <div className="h-px bg-white/[0.06]" />
 
-                  {/* Botón de Cerrar Sesión */}
-                  <div className="border-t border-neutral-800/80 pt-1">
-                    <button
-                      onClick={handleLogout}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Cerrar Sesión
-                    </button>
-                  </div>
-                </div>
-              )}
+                    <div className="p-1.5">
+                      <button
+                        role="menuitem"
+                        type="button"
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12px] font-semibold text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Cerrar sesión
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ) : (
             <Link href="/login" className="hidden sm:block">
-              <Button
-                size="sm"
-                className="rounded-full bg-amber-400 px-5 font-bold text-neutral-950 shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:bg-amber-300 transition-all"
-              >
-                Iniciar sesión
-              </Button>
+              <motion.div whileTap={{ scale: 0.96 }}>
+                <Button
+                  size="sm"
+                  className="h-8 rounded-xl bg-amber-200 px-4 text-[12px] font-semibold text-neutral-950 shadow-[0_1px_0_0_rgba(255,255,255,0.4)_inset] transition-all hover:bg-amber-100"
+                >
+                  Iniciar sesión
+                </Button>
+              </motion.div>
             </Link>
           )}
 
-          {/* BOTÓN CARRITO */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={openCart}
-            aria-label="Ver carrito"
-            className="relative rounded-full border border-neutral-800 bg-neutral-900 text-neutral-200 hover:bg-neutral-800 hover:text-white"
-          >
-            <ShoppingBag className="h-4 w-4" />
-            {itemCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[10px] font-extrabold text-neutral-950 shadow-[0_0_10px_rgba(251,191,36,0.6)]">
-                {itemCount}
-              </span>
-            )}
-          </Button>
+          <div className="mx-0.5 h-5 w-px bg-white/[0.08]" />
 
-          {/* MENÚ MÓVIL HAMBURGUESA */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full text-neutral-300 hover:bg-neutral-800 md:hidden"
-            onClick={toggleMobileMenu}
-            aria-label="Menú"
-          >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
-        </div>
-      </div>
-
-      {/* MENÚ DESPLEGABLE MÓVIL */}
-      {isMobileMenuOpen && (
-        <div className="absolute left-4 right-4 top-[76px] animate-in fade-in slide-in-from-top-3 duration-200 md:hidden">
-          <nav className="flex flex-col gap-1 rounded-3xl border border-neutral-800 bg-neutral-950/95 p-3 shadow-2xl shadow-black/80 backdrop-blur-2xl">
-            {NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={closeMobileMenu}
-                  className={`rounded-2xl px-4 py-3 text-sm font-semibold transition-colors ${
-                    isActive
-                      ? "bg-amber-400 text-neutral-950"
-                      : "text-neutral-300 hover:bg-neutral-900 hover:text-white"
-                  }`}
+          <motion.div whileTap={{ scale: 0.9 }}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={openCart}
+              aria-label={`Ver carrito${itemCount > 0 ? `, ${itemCount} productos` : ""}`}
+              className="relative h-8 w-8 rounded-xl text-neutral-300 hover:bg-white/[0.08] hover:text-white"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              {itemCount > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                  className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-300 text-[9px] font-black text-neutral-950 ring-2 ring-[#141416]"
                 >
-                  {link.label}
-                </Link>
-              );
-            })}
+                  {itemCount > 9 ? "9+" : itemCount}
+                </motion.span>
+              )}
+            </Button>
+          </motion.div>
 
-            <div className="my-1 h-px bg-neutral-800" />
+          <motion.div whileTap={{ scale: 0.9 }} className="md:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-xl text-neutral-300 hover:bg-white/[0.08]"
+              onClick={toggleMobileMenu}
+              aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </Button>
+          </motion.div>
+        </div>
+      </motion.div>
 
-            {!isAuthenticated ? (
-              <Link
-                href="/login"
-                onClick={closeMobileMenu}
-                className="rounded-2xl bg-amber-400 px-4 py-3 text-center text-sm font-bold text-neutral-950"
+      {/* OVERLAY + MENÚ MÓVIL */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden"
+              onClick={closeMobileMenu}
+              aria-hidden="true"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="absolute left-4 right-4 top-[72px] z-50 md:hidden"
+            >
+              <nav
+                aria-label="Navegación móvil"
+                className="flex flex-col gap-1 rounded-2xl border border-white/[0.08] bg-[#141416]/95 p-3 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.7)] backdrop-blur-2xl"
               >
-                Iniciar sesión
-              </Link>
-            ) : (
-              <>
-                {isAdmin && (
+                {NAV_LINKS.map((link) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={closeMobileMenu}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`rounded-xl px-4 py-2.5 text-[13px] font-medium transition-colors ${
+                        isActive
+                          ? "bg-white/[0.08] text-white"
+                          : "text-neutral-400 hover:bg-white/[0.05] hover:text-white"
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+
+                <div className="my-1.5 h-px bg-white/[0.08]" />
+
+                {!isAuthenticated ? (
                   <Link
-                    href="/admin"
+                    href="/login"
                     onClick={closeMobileMenu}
-                    className="flex items-center gap-2 rounded-2xl bg-amber-400/10 px-4 py-3 text-sm font-bold text-amber-400"
+                    className="rounded-xl bg-amber-200 px-4 py-2.5 text-center text-[13px] font-semibold text-neutral-950"
                   >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Panel Admin
+                    Iniciar sesión
                   </Link>
+                ) : (
+                  <>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        onClick={closeMobileMenu}
+                        className="flex items-center gap-2 rounded-xl bg-amber-300/[0.1] px-4 py-2.5 text-[13px] font-bold text-amber-200"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        Panel admin
+                      </Link>
+                    )}
+                    <Link
+                      href="/perfil"
+                      onClick={closeMobileMenu}
+                      className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-medium text-neutral-300 hover:bg-white/[0.05]"
+                    >
+                      <UserIcon className="h-4 w-4 text-neutral-500" />
+                      Mi perfil
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeMobileMenu();
+                        handleLogout();
+                      }}
+                      className="flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-red-400 hover:bg-red-500/10"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Cerrar sesión
+                    </button>
+                  </>
                 )}
-                <Link
-                  href="/perfil"
-                  onClick={closeMobileMenu}
-                  className="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-neutral-300 hover:bg-neutral-900"
-                >
-                  <UserIcon className="h-4 w-4 text-amber-400" />
-                  Mi Perfil
-                </Link>
-                <button
-                  onClick={() => {
-                    closeMobileMenu();
-                    handleLogout();
-                  }}
-                  className="flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/10"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Cerrar Sesión
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
-      )}
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

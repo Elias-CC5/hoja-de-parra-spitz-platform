@@ -24,7 +24,9 @@ import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { CartModule } from './cart/cart.module';
-import { ReservationsModule } from './reservations/reservations.module'; // 👈 1. IMPORTAR MÓDULO AQUÍ
+import { ReservationsModule } from './reservations/reservations.module';
+import { OrdersModule } from './orders/orders.module'; // 👈 1. IMPORTAR
+import { PaymentsModule } from './payments/payments.module'; // 👈 2. IMPORTAR
 
 @Module({
   imports: [
@@ -51,7 +53,9 @@ import { ReservationsModule } from './reservations/reservations.module'; // 👈
     ProductsModule,
     UploadsModule,
     CartModule,
-    ReservationsModule, // 👈 2. AGREGAR MÓDULO AL ARRAY DE IMPORTS
+    ReservationsModule,
+    OrdersModule,   // 👈 3. AGREGAR AL ARRAY
+    PaymentsModule, // 👈 4. AGREGAR AL ARRAY
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
