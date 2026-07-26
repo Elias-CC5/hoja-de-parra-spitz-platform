@@ -11,11 +11,6 @@ import { Public } from '../../common/decorators/public.decorator';
 export class ChatbotController {
   constructor(private readonly chatbotService: ChatbotService) {}
 
-  /**
-   * Público: el widget flotante puede usarse sin sesión iniciada,
-   * pero si hay un usuario autenticado, personaliza respuestas
-   * (ej. estado de sus pedidos/reservas).
-   */
   @Public()
   @ApiBearerAuth()
   @Post('message')

@@ -1,3 +1,4 @@
+// src/components/layout/Footer.tsx
 "use client";
 
 import Link from "next/link";
@@ -8,7 +9,7 @@ const LEAF_PATH =
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-[#0a0908] text-stone-100">
+    <div className="relative overflow-hidden bg-[#0a0908] text-stone-100">
       {/* Línea divisoria superior con degradado dorado */}
       <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
 
@@ -162,6 +163,6 @@ export function Footer() {
           <p className="text-[11px] text-stone-600">Gastronomía & Catering de Alta Gama</p>
         </div>
       </div>
-    </footer>
+    </div>
   );
 }

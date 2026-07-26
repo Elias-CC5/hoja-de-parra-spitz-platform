@@ -2,8 +2,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-
-// ⚙️ CONFIGURACIONES DE ENTORNO
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
@@ -25,8 +23,11 @@ import { ProductsModule } from './products/products.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { CartModule } from './cart/cart.module';
 import { ReservationsModule } from './reservations/reservations.module';
-import { OrdersModule } from './orders/orders.module'; // 👈 1. IMPORTAR
-import { PaymentsModule } from './payments/payments.module'; // 👈 2. IMPORTAR
+import { OrdersModule } from './orders/orders.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ChatbotModule } from './chatbot/chatbot.module'; 
+import { ServicesCatalogModule } from './services-catalog/services-catalog.module'; 
+
 
 @Module({
   imports: [
@@ -54,8 +55,10 @@ import { PaymentsModule } from './payments/payments.module'; // 👈 2. IMPORTAR
     UploadsModule,
     CartModule,
     ReservationsModule,
-    OrdersModule,   // 👈 3. AGREGAR AL ARRAY
-    PaymentsModule, // 👈 4. AGREGAR AL ARRAY
+    OrdersModule,
+    PaymentsModule,
+    ChatbotModule, 
+    ServicesCatalogModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

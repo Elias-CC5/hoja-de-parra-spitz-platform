@@ -1,3 +1,4 @@
+// src/app/(public)/page.tsx
 import { Hero } from "@/features/home/components/Hero";
 import { CategoryGrid } from "@/features/home/components/CategoryGrid";
 import { FeaturedProducts } from "@/features/home/components/FeaturedProducts";

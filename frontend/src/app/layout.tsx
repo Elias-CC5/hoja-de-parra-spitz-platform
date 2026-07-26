@@ -1,6 +1,8 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import Script from "next/script";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -44,14 +46,15 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Carga del SDK oficial de Culqi v4 */}
         <Script
           src="https://checkout.culqi.com/v4"
           strategy="afterInteractive"
         />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
