@@ -1,6 +1,5 @@
 // src/app/(public)/page.tsx
 import { Hero } from "@/features/home/components/Hero";
-import { CategoryGrid } from "@/features/home/components/CategoryGrid";
 import { FeaturedProducts } from "@/features/home/components/FeaturedProducts";
 import { BuffetServices } from "@/features/home/components/HowItWorks";
 import { Testimonials } from "@/features/home/components/Testimonials";
@@ -10,7 +9,6 @@ export default function HomePage() {
   return (
     <>
       <Hero />
-      <CategoryGrid />
       <FeaturedProducts />
       <BuffetServices />
       <Testimonials />
