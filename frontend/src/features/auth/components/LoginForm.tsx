@@ -61,26 +61,85 @@ const SHOWCASE_SLIDES = [
 
 const SLIDE_DURATION = 8000;
 
-const imageVariants: Record<string, any> = {
-  enter: { opacity: 0, scale: 1.1, clipPath: "circle(0% at 50% 45%)" },
-  center: {
+// ─────────────────────────────────────────────────────────
+// VARIANTES DE ANIMACIÓN ULTRA PROFESIONALES (FRAMER MOTION)
+// ─────────────────────────────────────────────────────────
+
+// Animación de entrada por cascada para el contenedor del formulario
+const formContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
     opacity: 1,
-    scale: 1,
-    clipPath: "circle(75% at 50% 45%)",
-    transition: { duration: 1.1, ease: [0.22, 1, 0.36, 1] },
-  },
-  exit: {
-    opacity: 1,
-    scale: 1.03,
-    clipPath: "circle(75% at 50% 45%)",
-    transition: { duration: 0.4, ease: "easeIn" },
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
   },
 };
 
-const quoteVariants: Record<string, any> = {
-  enter: { opacity: 0, y: 16 },
-  center: { opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.45 } },
-  exit: { opacity: 0, y: -10, transition: { duration: 0.25 } },
+// Animación suave de subida con desenfoque para los inputs
+const formItemVariants = {
+  hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.5,
+      ease: [0.25, 1, 0.5, 1],
+    },
+  },
+};
+
+// Transición 3D cinematográfica para las imágenes del showcase
+const image3DVariants = {
+  enter: {
+    opacity: 0,
+    scale: 1.15,
+    rotateY: -10,
+    filter: "blur(12px) brightness(0.7)",
+  },
+  center: {
+    opacity: 1,
+    scale: 1,
+    rotateY: 0,
+    filter: "blur(0px) brightness(1)",
+    transition: {
+      duration: 1.2,
+      ease: [0.16, 1, 0.3, 1], // Custom cubic-bezier fluido
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    rotateY: 10,
+    filter: "blur(8px) brightness(0.5)",
+    transition: {
+      duration: 0.6,
+      ease: "easeInOut",
+    },
+  },
+};
+
+// Cita emergente con rebote sutil
+const quoteVariants = {
+  enter: { opacity: 0, y: 25, scale: 0.95 },
+  center: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.6,
+      delay: 0.35,
+      ease: [0.34, 1.56, 0.64, 1], // Spring feel
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -15,
+    scale: 0.95,
+    transition: { duration: 0.3 },
+  },
 };
 
 export function LoginForm() {
@@ -99,17 +158,17 @@ export function LoginForm() {
   const current = SHOWCASE_SLIDES[currentSlide];
   const otherStyles = SHOWCASE_SLIDES.length - 1;
 
-  // Parallax y Tilt 3D
+  // Parallax y Tilt 3D Ultra Pro con Física Suave
   const mvX = useMotionValue(0);
   const mvY = useMotionValue(0);
 
-  const tiltRotateX = useSpring(useTransform(mvY, [-0.5, 0.5], [10, -10]), {
-    stiffness: 150,
-    damping: 18,
+  const tiltRotateX = useSpring(useTransform(mvY, [-0.5, 0.5], [12, -12]), {
+    stiffness: 120,
+    damping: 20,
   });
-  const tiltRotateY = useSpring(useTransform(mvX, [-0.5, 0.5], [-12, 12]), {
-    stiffness: 150,
-    damping: 18,
+  const tiltRotateY = useSpring(useTransform(mvX, [-0.5, 0.5], [-14, 14]), {
+    stiffness: 120,
+    damping: 20,
   });
 
   const handleMouseMove = useCallback(
@@ -145,7 +204,7 @@ export function LoginForm() {
     return () => clearInterval(timer);
   }, [isPaused]);
 
-  // Form handling
+  // Manejo de Formulario
   const {
     register,
     handleSubmit,
@@ -176,23 +235,22 @@ export function LoginForm() {
 
       <div className="relative z-20 w-full max-w-7xl mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-10 lg:gap-14 items-center h-full py-10 lg:py-0">
         
-        {/* COLUMNA IZQUIERDA: FORMULARIO */}
-        <div className="flex flex-col justify-center h-full max-w-md w-full mx-auto lg:mx-0">
+        {/* COLUMNA IZQUIERDA: FORMULARIO ANIMADO */}
+        <motion.div 
+          className="flex flex-col justify-center h-full max-w-md w-full mx-auto lg:mx-0"
+          variants={formContainerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <motion.span
             className="hero-badge w-fit mb-6"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            variants={formItemVariants}
           >
             <Sparkles className="w-3.5 h-3.5" />
             DeParraSpitz · Catering & Eventos
           </motion.span>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
+          <motion.div variants={formItemVariants}>
             <span className="hero-kicker block">Bienvenido de vuelta</span>
             <h1 className="mt-2 text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] text-foreground tracking-tight">
               Inicia tu <br />
@@ -212,7 +270,7 @@ export function LoginForm() {
               shake && "animate-[login-shake_0.5s_ease]"
             )}
           >
-            <div className="flex flex-col gap-1.5">
+            <motion.div className="flex flex-col gap-1.5" variants={formItemVariants}>
               <label htmlFor="email" className="login-label-clean">
                 Correo electrónico
               </label>
@@ -229,9 +287,9 @@ export function LoginForm() {
                   {errors.email.message}
                 </p>
               )}
-            </div>
+            </motion.div>
 
-            <div className="flex flex-col gap-1.5">
+            <motion.div className="flex flex-col gap-1.5" variants={formItemVariants}>
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="login-label-clean">
                   Contraseña
@@ -263,73 +321,91 @@ export function LoginForm() {
                   {errors.password.message}
                 </p>
               )}
-            </div>
+            </motion.div>
 
-            <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer select-none pt-0.5">
+            <motion.label 
+              className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer select-none pt-0.5"
+              variants={formItemVariants}
+            >
               <input
                 type="checkbox"
                 className="w-3.5 h-3.5 rounded border-zinc-700 bg-zinc-900 accent-amber-400"
               />
               Mantener sesión iniciada
-            </label>
+            </motion.label>
 
             {serverError && (
-              <div className="login-server-error-banner">
+              <motion.div className="login-server-error-banner" variants={formItemVariants}>
                 <AlertCircle size={14} className="shrink-0" />
                 <span>{serverError}</span>
-              </div>
+              </motion.div>
             )}
 
-            <button type="submit" disabled={isSubmitting} className="login-btn-primary">
-              {isSubmitting ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Loader2 className="animate-spin" size={15} />
-                  Ingresando...
-                </span>
-              ) : (
-                <span className="inline-flex items-center justify-center gap-1.5">
-                  Ingresar
-                  <ArrowRight size={14} />
-                </span>
-              )}
-            </button>
+            <motion.div variants={formItemVariants}>
+              <motion.button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="login-btn-primary"
+                whileHover={{ scale: 1.015 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isSubmitting ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Loader2 className="animate-spin" size={15} />
+                    Ingresando...
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center justify-center gap-1.5">
+                    Ingresar
+                    <ArrowRight size={14} />
+                  </span>
+                )}
+              </motion.button>
+            </motion.div>
 
-            <div className="login-divider-clean">
+            <motion.div className="login-divider-clean" variants={formItemVariants}>
               <span>O continúa con</span>
-            </div>
+            </motion.div>
 
-            <button type="button" className="login-btn-google">
-              <svg width="15" height="15" viewBox="0 0 48 48">
-                <path
-                  fill="#FFC107"
-                  d="M43.6 20.5H42V20H24v8h11.3C33.7 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.8-.4-3.5z"
-                />
-                <path
-                  fill="#FF3D00"
-                  d="M6.3 14.7l6.6 4.8C14.5 16 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.6 5.1 29.6 3 24 3 16.3 3 9.7 7.3 6.3 14.7z"
-                />
-                <path
-                  fill="#4CAF50"
-                  d="M24 45c5.5 0 10.5-1.8 14.3-5l-6.6-5.4C29.8 36 27 37 24 37c-5.3 0-9.6-3.4-11.3-8l-6.6 5.1C9.6 40.6 16.2 45 24 45z"
-                />
-                <path
-                  fill="#1976D2"
-                  d="M43.6 20.5H42V20H24v8h11.3c-1 3-3.2 5.4-6 6.9l6.6 5.4C39.6 37.4 43 31.4 43 24c0-1.4-.1-2.8-.4-3.5z"
-                />
-              </svg>
-              Continuar con Google
-            </button>
+            <motion.div variants={formItemVariants}>
+              <motion.button 
+                type="button" 
+                className="login-btn-google"
+                whileHover={{ scale: 1.015, backgroundColor: "rgba(255,255,255,0.05)" }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg width="15" height="15" viewBox="0 0 48 48">
+                  <path
+                    fill="#FFC107"
+                    d="M43.6 20.5H42V20H24v8h11.3C33.7 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.8-.4-3.5z"
+                  />
+                  <path
+                    fill="#FF3D00"
+                    d="M6.3 14.7l6.6 4.8C14.5 16 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.6 5.1 29.6 3 24 3 16.3 3 9.7 7.3 6.3 14.7z"
+                  />
+                  <path
+                    fill="#4CAF50"
+                    d="M24 45c5.5 0 10.5-1.8 14.3-5l-6.6-5.4C29.8 36 27 37 24 37c-5.3 0-9.6-3.4-11.3-8l-6.6 5.1C9.6 40.6 16.2 45 24 45z"
+                  />
+                  <path
+                    fill="#1976D2"
+                    d="M43.6 20.5H42V20H24v8h11.3c-1 3-3.2 5.4-6 6.9l6.6 5.4C39.6 37.4 43 31.4 43 24c0-1.4-.1-2.8-.4-3.5z"
+                  />
+                </svg>
+                Continuar con Google
+              </motion.button>
+            </motion.div>
 
-            <p className="text-center text-xs text-zinc-500 pt-1">
+            <motion.p className="text-center text-xs text-zinc-500 pt-1" variants={formItemVariants}>
               ¿Nuevo en la plataforma?{" "}
               <Link href="/registro" className="login-gold-link">
                 Crea tu cuenta
               </Link>
-            </p>
+            </motion.p>
           </form>
-        </div>
+        </motion.div>
 
-        {/* COLUMNA DERECHA: SHOWCASE 3D DE IMÁGENES Y BENTO THUMBNAILS */}
+        {/* COLUMNA DERECHA: SHOWCASE 3D CON ANIMACIÓN CINEMÁTICA */}
         <div className="hidden lg:block relative h-[440px] sm:h-[560px] lg:h-[calc(100vh-11rem)] lg:max-h-[720px] lg:min-h-[550px]">
           <div className="hero-media-wrap">
             {Array.from({ length: otherStyles }).map((_, i) => (
@@ -349,13 +425,13 @@ export function LoginForm() {
                 rotateY: tiltRotateY,
               }}
             >
-              <AnimatePresence mode="sync">
+              <AnimatePresence mode="wait">
                 <motion.img
                   key={current.src}
                   src={current.src}
                   alt={current.alt}
                   loading={currentSlide === 0 ? "eager" : "lazy"}
-                  variants={imageVariants}
+                  variants={image3DVariants}
                   initial="enter"
                   animate="center"
                   exit="exit"
@@ -365,7 +441,7 @@ export function LoginForm() {
               <div className="hero-media-overlay" />
               <div className="hero-glass-sheen" />
 
-              {/* Cita Flotante */}
+              {/* Cita Flotante con animación Spring */}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={current.src}
@@ -383,24 +459,26 @@ export function LoginForm() {
             </motion.div>
           </div>
 
-          {/* Panel Bento con Thumbnails */}
+          {/* Panel Bento interactivo */}
           <motion.div
             className="hero-thumb-panel"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.8, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, x: 30, filter: "blur(6px)" }}
+            animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+            transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             {SHOWCASE_SLIDES.map((img, i) => {
               const isActive = i === currentSlide;
               const ThumbIcon = img.icon;
 
               return (
-                <button
+                <motion.button
                   key={img.src}
                   type="button"
                   onClick={() => setCurrentSlide(i)}
                   aria-label={`Ver estilo ${img.label}`}
                   aria-pressed={isActive}
+                  whileHover={{ scale: 1.04, x: -2 }}
+                  whileTap={{ scale: 0.96 }}
                   className={cn("hero-thumb", isActive && "hero-thumb-active")}
                 >
                   <span className="hero-thumb-image-wrap flex items-center justify-center bg-black/40 backdrop-blur-md rounded-lg border border-white/10">
@@ -436,7 +514,7 @@ export function LoginForm() {
                       )}
                     </span>
                   </span>
-                </button>
+                </motion.button>
               );
             })}
           </motion.div>

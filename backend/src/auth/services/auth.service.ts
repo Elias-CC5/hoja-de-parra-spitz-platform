@@ -47,18 +47,27 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto) {
+async login(dto: LoginDto) {
     const user = await this.usersService.findByEmail(dto.email);
 
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    if (this.usersService.isAccountLocked(user)) {
+      throw new UnauthorizedException(
+        'Cuenta bloqueada temporalmente por demasiados intentos fallidos. Intenta en unos minutos.',
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
 
     if (!isPasswordValid) {
+      await this.usersService.registerFailedLoginAttempt(user.id);
       throw new UnauthorizedException('Credenciales inválidas');
     }
+
+    await this.usersService.resetFailedLoginAttempts(user.id);
 
     const tokens = await this.generateTokens({
       id: user.id,
@@ -73,7 +82,6 @@ export class AuthService {
       ...tokens,
     };
   }
-
   async refresh(user: AuthenticatedUser) {
     const tokens = await this.generateTokens(user);
     await this.persistRefreshToken(user.id, tokens.refreshToken);

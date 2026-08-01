@@ -22,12 +22,18 @@ export class User extends BaseEntity {
   @Column({ type: 'enum', enum: Role, default: Role.CLIENTE })
   role: Role;
 
-  // 1. Mapeamos isActive a is_active
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  // 2. Mapeamos refreshTokenHash a refresh_token_hash
   @Column({ name: 'refresh_token_hash', nullable: true })
   @Exclude({ toPlainOnly: true })
   refreshTokenHash?: string;
+
+  @Column({ name: 'failed_login_attempts', type: 'int', default: 0 })
+  @Exclude({ toPlainOnly: true })
+  failedLoginAttempts: number;
+
+  @Column({ name: 'locked_until', type: 'timestamp', nullable: true })
+  @Exclude({ toPlainOnly: true })
+  lockedUntil?: Date;
 }

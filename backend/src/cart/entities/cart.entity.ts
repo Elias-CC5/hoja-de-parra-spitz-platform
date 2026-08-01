@@ -6,8 +6,8 @@ import { CartItem } from './cart-item.entity';
 export class Cart extends BaseEntity {
   @Index({ unique: true })
   @Column({ name: 'user_id' })
-  userId: string;
+  userId!: string;
 
   @OneToMany(() => CartItem, (item) => item.cart, { cascade: true, eager: true })
-  items: CartItem[];
+  items!: CartItem[];
 }

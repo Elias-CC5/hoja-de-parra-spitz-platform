@@ -17,43 +17,43 @@ export enum ProductType {
 @Entity('products')
 export class Product extends BaseEntity {
   @Column({ length: 160 })
-  name: string;
+  name!: string;
 
   @Index({ unique: true })
   @Column({ length: 180 })
-  slug: string;
+  slug!: string;
 
   @Column({ type: 'text' })
-  description: string;
+  description!: string;
 
   @Column({ type: 'enum', enum: ProductType, default: ProductType.PLATO })
-  type: ProductType;
+  type!: ProductType;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
+  price!: number;
 
   @Column({ type: 'int', default: 1 })
-  minPeoplePerOrder: number;
+  minPeoplePerOrder!: number;
 
   @Column({ type: 'int', nullable: true })
   maxPeoplePerOrder?: number;
 
   @Column({ default: true })
-  isAvailable: boolean;
+  isAvailable!: boolean;
 
   @Column({ default: false })
-  isFeatured: boolean;
+  isFeatured!: boolean;
 
   @Column({ type: 'int', default: 0 })
-  stock: number; // 0 = sin control de stock (bajo pedido)
+  stock!: number; // 0 = sin control de stock (bajo pedido)
 
   @ManyToOne(() => Category, (category) => category.products, { eager: true })
   @JoinColumn({ name: 'category_id' })
-  category: Category;
+  category!: Category;
 
   @Column({ name: 'category_id' })
-  categoryId: string;
+  categoryId!: string;
 
   @OneToMany(() => ProductImage, (image) => image.product, { cascade: true })
-  images: ProductImage[];
+  images!: ProductImage[];
 }

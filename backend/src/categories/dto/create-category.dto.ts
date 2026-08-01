@@ -4,7 +4,7 @@ import { CategoryType } from '../entities/category.entity';
 export class CreateCategoryDto {
   @IsString()
   @MinLength(2)
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
@@ -15,7 +15,7 @@ export class CreateCategoryDto {
   imageUrl?: string;
 
   @IsEnum(CategoryType)
-  type: CategoryType;
+  type!: CategoryType;
 
   @IsOptional()
   @IsInt()

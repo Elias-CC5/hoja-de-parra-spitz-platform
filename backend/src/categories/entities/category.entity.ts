@@ -11,11 +11,11 @@ export enum CategoryType {
 export class Category extends BaseEntity {
   @Index({ unique: true })
   @Column({ length: 120 })
-  name: string;
+  name!: string;
 
   @Index({ unique: true })
   @Column({ length: 140 })
-  slug: string;
+  slug!: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
@@ -24,14 +24,14 @@ export class Category extends BaseEntity {
   imageUrl?: string;
 
   @Column({ type: 'enum', enum: CategoryType, default: CategoryType.PRODUCTO })
-  type: CategoryType;
+  type!: CategoryType;
 
   @Column({ default: 0 })
-  displayOrder: number;
+  displayOrder!: number;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @OneToMany(() => Product, (product) => product.category)
-  products: Product[];
+  products!: Product[];
 }

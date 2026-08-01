@@ -94,4 +94,46 @@ export class UsersService {
     const user = await this.findById(id);
     await this.usersRepository.softRemove(user);
   }
+
+  /**
+   * Incrementa el contador de intentos fallidos. Al llegar a 5,
+   * bloquea la cuenta 15 minutos (sin importar la IP del atacante).
+   */
+  async registerFailedLoginAttempt(id: string): Promise<void> {
+    const MAX_ATTEMPTS = 5;
+    const LOCKOUT_MINUTES = 15;
+
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) return;
+
+    const attempts = user.failedLoginAttempts + 1;
+    const lockedUntil =
+      attempts >= MAX_ATTEMPTS
+        ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000)
+        : user.lockedUntil;
+
+    await this.usersRepository.update(id, {
+      failedLoginAttempts: attempts,
+      lockedUntil,
+    });
+  }
+
+  /**
+   * Usa createQueryBuilder (en vez de Repository.update) porque necesitamos
+   * escribir NULL real en la base de datos. Repository.update con `null`
+   * no tipa contra `Date | undefined` de la entidad, y con `undefined`
+   * TypeORM directamente omite la columna del UPDATE (no la limpia).
+   */
+  async resetFailedLoginAttempts(id: string): Promise<void> {
+    await this.usersRepository
+      .createQueryBuilder()
+      .update(User)
+      .set({ failedLoginAttempts: 0, lockedUntil: null as unknown as Date })
+      .where('id = :id', { id })
+      .execute();
+  }
+
+  isAccountLocked(user: User): boolean {
+    return !!user.lockedUntil && user.lockedUntil.getTime() > Date.now();
+  }
 }

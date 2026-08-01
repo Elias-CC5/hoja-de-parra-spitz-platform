@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
@@ -14,7 +14,7 @@ async function bootstrap() {
 
   // Prefijo global de la API (ej. /api/v1/products)
   app.setGlobalPrefix(apiPrefix);
-
+  app.use(helmet());
   // CORS: solo el frontend autorizado puede consumir la API
   app.enableCors({
     origin: frontendUrl,

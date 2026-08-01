@@ -1,7 +1,12 @@
 // backend/src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
+import {
+  ThrottlerModule,
+  ThrottlerGuard,
+  ThrottlerStorage,
+} from '@nestjs/throttler';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
@@ -25,9 +30,8 @@ import { CartModule } from './cart/cart.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
-import { ChatbotModule } from './chatbot/chatbot.module'; 
-import { ServicesCatalogModule } from './services-catalog/services-catalog.module'; 
-
+import { ChatbotModule } from './chatbot/chatbot.module';
+import { ServicesCatalogModule } from './services-catalog/services-catalog.module';
 
 @Module({
   imports: [
@@ -46,6 +50,12 @@ import { ServicesCatalogModule } from './services-catalog/services-catalog.modul
       validationOptions: { abortEarly: false },
     }),
     DatabaseModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // ventana de 60 segundos
+        limit: 100, // 100 requests por IP en esa ventana
+      },
+    ]),
 
     // Módulos de dominio activos
     AuthModule,
@@ -57,11 +67,22 @@ import { ServicesCatalogModule } from './services-catalog/services-catalog.modul
     ReservationsModule,
     OrdersModule,
     PaymentsModule,
-    ChatbotModule, 
+    ChatbotModule,
     ServicesCatalogModule,
   ],
   providers: [
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    // Inyección de ThrottlerGuard compatible con v5+ de @nestjs/throttler
+    {
+      provide: APP_GUARD,
+      useFactory: (options, storage, reflector) =>
+        new ThrottlerGuard(options, storage, reflector),
+      inject: ['THROTTLER:MODULE_OPTIONS', ThrottlerStorage, Reflector],
+    },
+    // Autenticación JWT aplicada globalmente; se libera con @Public()
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
   ],

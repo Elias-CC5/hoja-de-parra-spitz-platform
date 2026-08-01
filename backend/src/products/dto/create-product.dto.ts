@@ -11,19 +11,19 @@ import { Type } from 'class-transformer';
 
 class ImageDto {
   @IsString()
-  url: string;
+  url!: string;
 }
 
 export class CreateProductDto {
   @IsString()
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
   description?: string;
 
   @IsNumber()
-  price: number;
+  price!: number;
 
   @IsOptional()
   @IsString()

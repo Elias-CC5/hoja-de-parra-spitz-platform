@@ -2,11 +2,11 @@ import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class AddCartItemDto {
   @IsUUID()
-  productId: string;
+  productId!: string;
 
   @IsInt()
   @Min(1)
-  quantity: number;
+  quantity!: number;
 
   @IsOptional()
   @IsString()
