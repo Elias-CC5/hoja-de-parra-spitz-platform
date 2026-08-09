@@ -4,17 +4,22 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
   const apiPrefix = configService.get<string>('app.apiPrefix') ?? 'api/v1';
-  const port = configService.get<number>('app.port') ?? 3001;
+  
+  // --- CAMBIO CLAVE AQUÍ PARA RENDER ---
+  const port = process.env.PORT || configService.get<number>('app.port') || 3001;
+  
   const frontendUrl = configService.get<string>('app.frontendUrl');
 
   // Prefijo global de la API (ej. /api/v1/products)
   app.setGlobalPrefix(apiPrefix);
   app.use(helmet());
+  
   // CORS: solo el frontend autorizado puede consumir la API
   app.enableCors({
     origin: frontendUrl,
@@ -44,8 +49,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup(`${apiPrefix}/docs`, app, document);
 
-  await app.listen(port);
-  console.log(`🚀 API corriendo en http://localhost:${port}/${apiPrefix}`);
-  console.log(`📚 Swagger docs en http://localhost:${port}/${apiPrefix}/docs`);
+  // Escuchar en 0.0.0.0 es indispensable para entornos cloud como Render
+  await app.listen(port, '0.0.0.0');
+  
+  console.log(`🚀 API corriendo en el puerto ${port}`);
+  console.log(`📚 Swagger docs en /${apiPrefix}/docs`);
 }
 bootstrap();
