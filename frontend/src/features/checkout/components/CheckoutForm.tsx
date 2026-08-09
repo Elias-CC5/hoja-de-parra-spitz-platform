@@ -36,10 +36,8 @@ const formatImageUrl = (url: string | null | undefined): string | null => {
 const getImageUrlFromObject = (obj: any): string | null => {
   if (!obj) return null;
 
-  // Si obj es item o product
   const product = obj.product || obj;
 
-  // 1. Array de imágenes
   const images = product.images || obj.images || product.productImages;
   if (Array.isArray(images) && images.length > 0) {
     for (const img of images) {
@@ -51,7 +49,6 @@ const getImageUrlFromObject = (obj: any): string | null => {
     }
   }
 
-  // 2. Propiedades directas
   const possibleProps = [
     product.imageUrl,
     product.image,
@@ -81,12 +78,10 @@ export function CheckoutForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Estado para guardar las imágenes recuperadas dinámicamente si la API /cart no las trae
   const [productImagesMap, setProductImagesMap] = useState<Record<string, string>>({});
 
   const PHONE_NUMBER = "51994222690";
 
-  // Efecto para buscar imágenes de productos si /cart no devolvió ninguna
   useEffect(() => {
     const loadMissingImages = async () => {
       if (!summary?.cart?.items) return;
@@ -96,14 +91,12 @@ export function CheckoutForm() {
       for (const item of summary.cart.items) {
         const productId = item.productId || item.product?.id || item.id;
         
-        // Verificar si el ítem ya trae foto
         const directImage = getImageUrlFromObject(item);
         if (directImage) {
           if (productId) newMap[productId] = directImage;
           continue;
         }
 
-        // Si no trae foto y tenemos ID de producto, consultar a la API de productos
         if (productId) {
           try {
             const productData = await api.get<never, any>(`/products/${productId}`);
@@ -112,7 +105,7 @@ export function CheckoutForm() {
               newMap[productId] = fetchedImg;
             }
           } catch {
-            // Si falla la petición individual, intentamos listar productos o ignoramos silenciosamente
+            // Ignorar errores individuales
           }
         }
       }
@@ -136,6 +129,7 @@ export function CheckoutForm() {
     setIsSubmitting(true);
 
     try {
+      // Formatear la lista de productos sin links de imágenes
       const itemsList = summary.cart.items
         .map((item: any) => {
           const rawItem = item || {};
@@ -145,7 +139,7 @@ export function CheckoutForm() {
           const quantity = Number(rawItem.quantity ?? 1);
           const productName = product.name || rawItem.name || "Producto";
 
-          return `• *${productName}* (x${quantity}) - S/ ${(unitPrice * quantity).toFixed(2)}`;
+          return `- *${productName}* (x${quantity}) - S/ ${(unitPrice * quantity).toFixed(2)}`;
         })
         .join("\n");
 
@@ -154,14 +148,20 @@ export function CheckoutForm() {
       const shipping = Number(summary.shipping ?? 0);
       const total = Number(summary.total ?? 0);
 
+      // Estructura limpia estilo Ticket/Cotización
       const message = 
-        `*¡Hola! Quisiera realizar el siguiente pedido:* 🍽️\n\n` +
-        `*📋 DETALLE DE PRODUCTOS:*\n${itemsList}\n\n` +
-        `*💰 RESUMEN DE PAGO:*\n` +
-        `• Subtotal: S/ ${subtotal.toFixed(2)}\n` +
-        `• IGV (18%): S/ ${tax.toFixed(2)}\n` +
-        `• Envío: ${shipping === 0 ? "Gratis" : `S/ ${shipping.toFixed(2)}`}\n` +
-        `*Total a Pagar: S/ ${total.toFixed(2)}*`;
+        `*SOLICITUD DE PEDIDO - DEPARRASPITZ*\n` +
+        `=================================\n` +
+        `Hola, me gustaría confirmar el siguiente pedido para mi evento:\n\n` +
+        `*DETALLE DE PRODUCTOS:*\n` +
+        `${itemsList}\n\n` +
+        `*RESUMEN DE PAGO:*\n` +
+        `- *Subtotal:* S/ ${subtotal.toFixed(2)}\n` +
+        `- *IGV (18%):* S/ ${tax.toFixed(2)}\n` +
+        `- *Costo de Envío:* ${shipping === 0 ? "Gratis" : `S/ ${shipping.toFixed(2)}`}\n` +
+        `- *Total a Pagar:* S/ ${total.toFixed(2)}\n` +
+        `=================================\n` +
+        `Quedo a la espera de sus comentarios para coordinar el pago. ¡Muchas gracias!`;
 
       const whatsappUrl = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, "_blank");
@@ -248,7 +248,6 @@ export function CheckoutForm() {
               const product = rawItem.product || {};
               const productId = rawItem.productId || product.id || rawItem.id;
 
-              // Obtener imagen del objeto o del mapa recuperado por API
               const imageUrl = getImageUrlFromObject(rawItem) || productImagesMap[productId] || null;
 
               const price = Number(rawItem.price ?? product.price ?? rawItem.unitPrice ?? 0);

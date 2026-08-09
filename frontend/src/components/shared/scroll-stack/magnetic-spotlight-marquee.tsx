@@ -1,4 +1,4 @@
-// components/ui/magnetic-spotlight-marquee.tsx
+// src/components/shared/scroll-stack/magnetic-spotlight-marquee.tsx
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
@@ -184,21 +184,21 @@ export function MagneticSpotlightMarquee({
       let blockTop = Infinity;
 
       targets = elements.map((el): WakeTarget => {
-  let y = 0;
-  let node: HTMLElement | null = el;
-  while (node && node !== spotlightSection) {
-    y += node.offsetTop;
-    node = node.offsetParent as HTMLElement;
-  }
-  const restCenterY = y + el.offsetHeight / 2;
-  blockTop = Math.min(blockTop, restCenterY - el.offsetHeight / 2);
+        let y = 0;
+        let node: HTMLElement | null = el;
+        while (node && node !== spotlightSection) {
+          y += node.offsetTop;
+          node = node.offsetParent as HTMLElement;
+        }
+        const restCenterY = y + el.offsetHeight / 2;
+        blockTop = Math.min(blockTop, restCenterY - el.offsetHeight / 2);
 
-  return {
-    setY: (value: number) => gsap.quickSetter(el, "y", "px")(value),
-    restCenterY,
-    currentY: 0,
-  };
-});
+        return {
+          setY: (value: number) => gsap.quickSetter(el, "y", "px")(value),
+          restCenterY,
+          currentY: 0,
+        };
+      });
 
       contentTopAtRest = isFinite(blockTop) ? blockTop : sectionHeight * 0.4;
 
@@ -397,7 +397,7 @@ export function MagneticSpotlightMarquee({
         className="spotlight-content-wrapper relative w-full h-full flex flex-col items-center justify-center px-6 md:px-12 lg:px-20 z-20 pointer-events-none"
         style={{ transform: "translateZ(0)" }}
       >
-        <h1 className="font-display text-[12vw] md:text-[8rem] font-normal leading-[0.85] tracking-tighter mb-12 md:mb-16 text-center flex flex-col items-center text-stone-100">
+        <h1 className="font-sans text-[12vw] md:text-[8rem] font-normal leading-[0.85] tracking-tighter mb-12 md:mb-16 text-center flex flex-col items-center text-stone-100">
           {title.map((line, idx) => (
             <div key={idx} className="wake-target inline-block relative" style={{ transform: "translateZ(0)" }}>
               {line}

@@ -3,6 +3,11 @@
 
 import { MagneticSpotlightMarquee } from "@/components/shared/scroll-stack/magnetic-spotlight-marquee";
 
-export function MenuHero() {
+interface MenuHeroProps {
+  totalItems?: number;
+  isLoading?: boolean;
+}
+
+export function MenuHero({ totalItems, isLoading }: MenuHeroProps) {
   return <MagneticSpotlightMarquee />;
 }
