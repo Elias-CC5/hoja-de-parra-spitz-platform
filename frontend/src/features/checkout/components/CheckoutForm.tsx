@@ -1,92 +1,196 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Loader2, 
-  MapPin, 
-  Calendar, 
-  Users, 
-  FileText, 
-  CreditCard, 
-  CheckCircle2, 
   AlertCircle, 
   ShoppingBag,
-  ArrowRight
+  Send,
+  UtensilsCrossed
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuthStore } from "@/store/auth.store";
 import { useCartStore } from "@/store/cart.store";
-import { checkoutSchema, type CheckoutFormValues } from "../services/checkout.schemas";
-import { checkoutService } from "../services/checkout.service";
-import { useCulqiCheckout } from "../hooks/useCulqiCheckout";
+import { api } from "@/lib/axios";
 
-type CheckoutStep = "form" | "processing" | "success" | "error";
+// URL base del backend
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+
+// Helper universal para formatear cualquier URL de imagen
+const formatImageUrl = (url: string | null | undefined): string | null => {
+  if (!url || typeof url !== "string") return null;
+  const cleanUrl = url.trim();
+  if (!cleanUrl) return null;
+
+  if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://") || cleanUrl.startsWith("data:")) {
+    return cleanUrl;
+  }
+
+  const cleanPath = cleanUrl.startsWith("/") ? cleanUrl : `/${cleanUrl}`;
+  return `${API_BASE_URL.replace(/\/$/, "")}${cleanPath}`;
+};
+
+// Extrae la imagen del objeto item/product
+const getImageUrlFromObject = (obj: any): string | null => {
+  if (!obj) return null;
+
+  // Si obj es item o product
+  const product = obj.product || obj;
+
+  // 1. Array de imágenes
+  const images = product.images || obj.images || product.productImages;
+  if (Array.isArray(images) && images.length > 0) {
+    for (const img of images) {
+      if (typeof img === "string") return formatImageUrl(img);
+      if (img?.url) return formatImageUrl(img.url);
+      if (img?.path) return formatImageUrl(img.path);
+      if (img?.imageUrl) return formatImageUrl(img.imageUrl);
+      if (img?.filename) return formatImageUrl(`/uploads/${img.filename}`);
+    }
+  }
+
+  // 2. Propiedades directas
+  const possibleProps = [
+    product.imageUrl,
+    product.image,
+    product.url,
+    product.photo,
+    product.photoUrl,
+    product.coverImage,
+    product.mainImage,
+    obj.imageUrl,
+    obj.image,
+    obj.productImage
+  ];
+
+  for (const prop of possibleProps) {
+    if (typeof prop === "string" && prop.trim().length > 0) {
+      return formatImageUrl(prop);
+    }
+  }
+
+  return null;
+};
 
 export function CheckoutForm() {
   const router = useRouter();
-  const user = useAuthStore((state) => state.user);
   const { summary, fetchCart } = useCartStore();
-  const [step, setStep] = useState<CheckoutStep>("form");
+  const [step, setStep] = useState<"form" | "success">("form");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<CheckoutFormValues>({ resolver: zodResolver(checkoutSchema) });
+  // Estado para guardar las imágenes recuperadas dinámicamente si la API /cart no las trae
+  const [productImagesMap, setProductImagesMap] = useState<Record<string, string>>({});
 
-  const handleTokenReady = async (token: string) => {
-    if (!createdOrderId || !user) return;
-    setStep("processing");
+  const PHONE_NUMBER = "51994222690";
+
+  // Efecto para buscar imágenes de productos si /cart no devolvió ninguna
+  useEffect(() => {
+    const loadMissingImages = async () => {
+      if (!summary?.cart?.items) return;
+
+      const newMap: Record<string, string> = {};
+
+      for (const item of summary.cart.items) {
+        const productId = item.productId || item.product?.id || item.id;
+        
+        // Verificar si el ítem ya trae foto
+        const directImage = getImageUrlFromObject(item);
+        if (directImage) {
+          if (productId) newMap[productId] = directImage;
+          continue;
+        }
+
+        // Si no trae foto y tenemos ID de producto, consultar a la API de productos
+        if (productId) {
+          try {
+            const productData = await api.get<never, any>(`/products/${productId}`);
+            const fetchedImg = getImageUrlFromObject(productData);
+            if (fetchedImg) {
+              newMap[productId] = fetchedImg;
+            }
+          } catch {
+            // Si falla la petición individual, intentamos listar productos o ignoramos silenciosamente
+          }
+        }
+      }
+
+      if (Object.keys(newMap).length > 0) {
+        setProductImagesMap((prev) => ({ ...prev, ...newMap }));
+      }
+    };
+
+    loadMissingImages();
+  }, [summary]);
+
+  const handleSendWhatsApp = async () => {
+    setErrorMessage(null);
+
+    if (!summary || !summary.cart?.items || summary.cart.items.length === 0) {
+      setErrorMessage("Tu carrito está vacío.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      await checkoutService.payOrder(createdOrderId, token, user.email);
+      const itemsList = summary.cart.items
+        .map((item: any) => {
+          const rawItem = item || {};
+          const product = rawItem.product || {};
+
+          const unitPrice = Number(rawItem.price ?? product.price ?? rawItem.unitPrice ?? 0);
+          const quantity = Number(rawItem.quantity ?? 1);
+          const productName = product.name || rawItem.name || "Producto";
+
+          return `• *${productName}* (x${quantity}) - S/ ${(unitPrice * quantity).toFixed(2)}`;
+        })
+        .join("\n");
+
+      const subtotal = Number(summary.subtotal ?? 0);
+      const tax = Number(summary.tax ?? 0);
+      const shipping = Number(summary.shipping ?? 0);
+      const total = Number(summary.total ?? 0);
+
+      const message = 
+        `*¡Hola! Quisiera realizar el siguiente pedido:* 🍽️\n\n` +
+        `*📋 DETALLE DE PRODUCTOS:*\n${itemsList}\n\n` +
+        `*💰 RESUMEN DE PAGO:*\n` +
+        `• Subtotal: S/ ${subtotal.toFixed(2)}\n` +
+        `• IGV (18%): S/ ${tax.toFixed(2)}\n` +
+        `• Envío: ${shipping === 0 ? "Gratis" : `S/ ${shipping.toFixed(2)}`}\n` +
+        `*Total a Pagar: S/ ${total.toFixed(2)}*`;
+
+      const whatsappUrl = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, "_blank");
+
       setStep("success");
       await fetchCart();
+
     } catch {
-      setStep("error");
-      setErrorMessage("El pago fue rechazado. Puedes intentar nuevamente con otra tarjeta.");
+      setErrorMessage("Ocurrió un problema al redirigir a WhatsApp.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const { openCheckout } = useCulqiCheckout({
-    amountInSoles: summary?.total ?? 0,
-    onTokenReady: handleTokenReady,
-  });
-
-  const onSubmit = async (values: CheckoutFormValues) => {
-    setErrorMessage(null);
-    try {
-      const order = await checkoutService.createOrder(values);
-      setCreatedOrderId(order.id);
-      openCheckout();
-    } catch {
-      setErrorMessage("No pudimos crear tu pedido. Verifica que tu carrito no esté vacío.");
-    }
-  };
-
-  // --- ESTADO: PAGO EXITOSO ---
+  // --- ESTADO: PEDIDO COMPLETADO ---
   if (step === "success") {
     return (
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        className="rounded-2xl border border-emerald-500/30 bg-neutral-900/60 p-8 text-center backdrop-blur-xl shadow-2xl"
+        className="rounded-2xl border border-emerald-500/30 bg-neutral-900/60 p-8 text-center backdrop-blur-xl shadow-2xl max-w-lg mx-auto"
       >
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4">
-          <CheckCircle2 className="h-10 w-10" />
+          <Send className="h-8 w-8" />
         </div>
-        <h2 className="font-display text-2xl font-bold text-white">¡Pago Confirmado!</h2>
+        <h2 className="font-display text-2xl font-bold text-white">¡Pedido Redirigido a WhatsApp!</h2>
         <p className="mt-2 text-sm text-neutral-400 max-w-md mx-auto">
-          Tu pedido fue registrado con éxito. Nos pondremos en contacto contigo pronto para coordinar los detalles.
+          Hemos abierto una conversación para coordinar los detalles finales de tu pedido.
         </p>
         <Button 
           className="mt-6 bg-amber-400 font-semibold text-neutral-950 hover:bg-amber-300 transition-colors"
@@ -99,18 +203,18 @@ export function CheckoutForm() {
   }
 
   // --- ESTADO: CARRITO VACÍO ---
-  if (!summary || summary.cart.items.length === 0) {
+  if (!summary || !summary.cart?.items || summary.cart.items.length === 0) {
     return (
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-12 text-center text-neutral-400 backdrop-blur-md"
+        className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-12 text-center text-neutral-400 backdrop-blur-md max-w-md mx-auto"
       >
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-neutral-800/80 text-neutral-500 mb-3">
           <ShoppingBag className="h-7 w-7" />
         </div>
         <p className="text-base font-medium text-neutral-300">Tu carrito está vacío</p>
-        <p className="text-xs text-neutral-500 mt-1">Agrega productos del menú antes de finalizar tu compra.</p>
+        <p className="text-xs text-neutral-500 mt-1">Agrega productos del menú para finalizar tu compra.</p>
         <Button 
           variant="outline" 
           className="mt-5 border-neutral-700 text-neutral-300 hover:bg-neutral-800"
@@ -122,107 +226,82 @@ export function CheckoutForm() {
     );
   }
 
-  // --- FORMULARIO PRINCIPAL ---
+  // --- VISTA PRINCIPAL ---
   return (
-    <motion.form 
+    <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      onSubmit={handleSubmit(onSubmit)} 
       className="grid gap-8 lg:grid-cols-12"
     >
-      {/* COLUMNA IZQUIERDA: Formulario de Datos (7 Cols) */}
+      {/* COLUMNA IZQUIERDA: Ítems */}
       <div className="space-y-6 lg:col-span-7">
         <div className="rounded-2xl border border-neutral-800/80 bg-neutral-900/40 p-6 backdrop-blur-md space-y-5">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-amber-400" />
-            Detalles de Entrega
+          <h2 className="text-lg font-semibold text-white flex items-center gap-2 border-b border-neutral-800/80 pb-4">
+            <UtensilsCrossed className="h-5 w-5 text-amber-400" />
+            Productos de tu Pedido
           </h2>
 
-          {/* Dirección */}
-          <div className="space-y-2">
-            <Label htmlFor="deliveryAddress" className="text-xs font-medium text-neutral-300">
-              Dirección de entrega
-            </Label>
-            <div className="relative">
-              <Input 
-                id="deliveryAddress" 
-                placeholder="Ej. Av. Primavera 123, Dpto 402 - Surco" 
-                className="bg-neutral-950/60 border-neutral-800 focus:border-amber-400/50 text-white pl-9 h-11 transition-all"
-                {...register("deliveryAddress")} 
-              />
-              <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-neutral-500" />
-            </div>
-            {errors.deliveryAddress && (
-              <p className="text-xs text-red-400 flex items-center gap-1 mt-1">
-                <AlertCircle className="h-3 w-3" /> {errors.deliveryAddress.message}
-              </p>
-            )}
-          </div>
+          <div className="divide-y divide-neutral-800/60 max-h-[420px] overflow-y-auto pr-2 custom-scrollbar">
+            {summary.cart.items.map((item: any, index: number) => {
+              const rawItem = item || {};
+              const product = rawItem.product || {};
+              const productId = rawItem.productId || product.id || rawItem.id;
 
-          {/* Fecha y Personas */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="eventDate" className="text-xs font-medium text-neutral-300">
-                Fecha del evento / entrega
-              </Label>
-              <div className="relative">
-                <Input 
-                  id="eventDate" 
-                  type="date" 
-                  className="bg-neutral-950/60 border-neutral-800 focus:border-amber-400/50 text-white pl-9 h-11 transition-all [color-scheme:dark]"
-                  {...register("eventDate")} 
-                />
-                <Calendar className="absolute left-3 top-3.5 h-4 w-4 text-neutral-500" />
-              </div>
-              {errors.eventDate && (
-                <p className="text-xs text-red-400 flex items-center gap-1 mt-1">
-                  <AlertCircle className="h-3 w-3" /> {errors.eventDate.message}
-                </p>
-              )}
-            </div>
+              // Obtener imagen del objeto o del mapa recuperado por API
+              const imageUrl = getImageUrlFromObject(rawItem) || productImagesMap[productId] || null;
 
-            <div className="space-y-2">
-              <Label htmlFor="numberOfPeople" className="text-xs font-medium text-neutral-300">
-                N° de comensales / personas
-              </Label>
-              <div className="relative">
-                <Input 
-                  id="numberOfPeople" 
-                  type="number" 
-                  min={1} 
-                  placeholder="10"
-                  className="bg-neutral-950/60 border-neutral-800 focus:border-amber-400/50 text-white pl-9 h-11 transition-all"
-                  {...register("numberOfPeople")} 
-                />
-                <Users className="absolute left-3 top-3.5 h-4 w-4 text-neutral-500" />
-              </div>
-              {errors.numberOfPeople && (
-                <p className="text-xs text-red-400 flex items-center gap-1 mt-1">
-                  <AlertCircle className="h-3 w-3" /> {errors.numberOfPeople.message}
-                </p>
-              )}
-            </div>
-          </div>
+              const price = Number(rawItem.price ?? product.price ?? rawItem.unitPrice ?? 0);
+              const qty = Number(rawItem.quantity ?? 1);
+              const itemTotal = price * qty;
+              const productName = product.name || rawItem.name || "Producto";
 
-          {/* Notas Adicionales */}
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="text-xs font-medium text-neutral-300">
-              Indicaciones especiales o notas (opcional)
-            </Label>
-            <div className="relative">
-              <textarea
-                id="notes"
-                rows={3}
-                placeholder="Ej. Timbre malogrado, restricciones alimenticias, etc."
-                className="w-full rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-sm text-white placeholder:text-neutral-600 focus:border-amber-400/50 focus:outline-none transition-all"
-                {...register("notes")}
-              />
-            </div>
+              return (
+                <div key={rawItem.id || `cart-item-${index}`} className="py-4 first:pt-0 last:pb-0 flex items-center gap-4">
+                  {/* Contenedor de Imagen */}
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-950 flex items-center justify-center">
+                    {imageUrl ? (
+                      <img 
+                        src={imageUrl} 
+                        alt={productName} 
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "https://placehold.co/100x100/171717/F59E0B?text=Sin+Foto";
+                        }}
+                      />
+                    ) : (
+                      <span className="text-[10px] text-amber-400 font-semibold text-center px-1">
+                        Sin Foto
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Detalle del producto */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-white truncate capitalize">
+                      {productName}
+                    </h3>
+                    <p className="text-xs text-neutral-400 mt-1">
+                      Cantidad: <span className="text-amber-400 font-semibold">{qty}</span>
+                    </p>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      Precio unitario: S/ {price.toFixed(2)}
+                    </p>
+                  </div>
+
+                  {/* Subtotal por ítem */}
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-white">
+                      S/ {itemTotal.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Mensaje de Error si falla la API */}
         <AnimatePresence>
           {errorMessage && (
             <motion.div 
@@ -238,7 +317,7 @@ export function CheckoutForm() {
         </AnimatePresence>
       </div>
 
-      {/* COLUMNA DERECHA: Resumen de Pago (5 Cols) */}
+      {/* COLUMNA DERECHA: Resumen */}
       <div className="space-y-6 lg:col-span-5">
         <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 backdrop-blur-xl shadow-xl space-y-5">
           <h3 className="text-base font-semibold text-white flex items-center justify-between border-b border-neutral-800/80 pb-4">
@@ -248,57 +327,55 @@ export function CheckoutForm() {
             </span>
           </h3>
 
-          {/* Desglose de Precios */}
           <div className="space-y-3 text-sm text-neutral-400">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span className="text-neutral-200">S/ {summary.subtotal.toFixed(2)}</span>
+              <span className="text-neutral-200">S/ {Number(summary.subtotal ?? 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>IGV (18%)</span>
-              <span className="text-neutral-200">S/ {summary.tax.toFixed(2)}</span>
+              <span className="text-neutral-200">S/ {Number(summary.tax ?? 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>Costo de Envío</span>
               <span className="text-emerald-400 font-medium">
-                {summary.shipping === 0 ? "Gratis" : `S/ ${summary.shipping.toFixed(2)}`}
+                {Number(summary.shipping ?? 0) === 0 ? "Gratis" : `S/ ${Number(summary.shipping).toFixed(2)}`}
               </span>
             </div>
 
             <div className="border-t border-neutral-800 pt-3 flex justify-between items-baseline">
               <span className="font-semibold text-white">Total a pagar</span>
               <span className="font-display text-2xl font-bold text-amber-400">
-                S/ {summary.total.toFixed(2)}
+                S/ {Number(summary.total ?? 0).toFixed(2)}
               </span>
             </div>
           </div>
 
-          {/* Botón Principal de Pago */}
           <Button
-            type="submit"
+            type="button"
+            onClick={handleSendWhatsApp}
             size="lg"
-            className="group w-full h-12 bg-gradient-to-r from-amber-400 to-amber-500 text-neutral-950 font-bold hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-lg shadow-amber-500/10 rounded-xl flex items-center justify-center gap-2"
-            disabled={isSubmitting || step === "processing"}
+            className="group w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all duration-300 shadow-lg shadow-emerald-600/20 rounded-xl flex items-center justify-center gap-2"
+            disabled={isSubmitting}
           >
-            {(isSubmitting || step === "processing") ? (
+            {isSubmitting ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Procesando pedido...</span>
+                <span>Generando pedido...</span>
               </>
             ) : (
               <>
-                <CreditCard className="h-5 w-5" />
-                <span>Pagar con tarjeta (Culqi)</span>
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <Send className="h-5 w-5" />
+                <span>Completar pedido por WhatsApp</span>
               </>
             )}
           </Button>
 
-          <p className="text-[11px] text-center text-neutral-500 flex items-center justify-center gap-1">
-            🔒 Procesado de forma segura mediante Culqi
+          <p className="text-[11px] text-center text-neutral-500">
+            🟢 Serás redirigido a WhatsApp para confirmar los detalles
           </p>
         </div>
       </div>
-    </motion.form>
+    </motion.div>
   );
 }

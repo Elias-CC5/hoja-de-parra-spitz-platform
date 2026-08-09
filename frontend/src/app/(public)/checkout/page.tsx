@@ -37,7 +37,7 @@ export default function CheckoutPage() {
         {/* Garantía / Confianza inferior */}
         <div className="mt-12 flex items-center justify-center gap-2 text-xs text-neutral-500">
           <ShieldCheck className="h-4 w-4 text-emerald-400" />
-          <span>Pago 100% encriptado y procesamiento seguro mediante Culqi.</span>
+          <span>Pago 100% encriptado y procesamiento seguro mediante.</span>
         </div>
       </div>
     </div>
