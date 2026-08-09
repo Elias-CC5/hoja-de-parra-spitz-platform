@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { reservationsService } from "@/features/reservations/services/reservations.service";
 import type { Reservation } from "@/types";
 import { Calendar, Users, MapPin, Clock } from "lucide-react";
@@ -9,7 +9,7 @@ export function ReservationHistory() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchReservations = async () => {
+  const fetchReservations = useCallback(async () => {
     try {
       setLoading(true);
       const data = await reservationsService.findMine();
@@ -19,11 +19,11 @@ export function ReservationHistory() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchReservations();
-  }, []);
+  }, [fetchReservations]);
 
   if (loading) {
     return <p className="text-sm text-neutral-400">Cargando tus reservas...</p>;

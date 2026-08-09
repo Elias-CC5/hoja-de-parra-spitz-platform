@@ -1,15 +1,13 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* tu configuración existente... */
-  typescript: {
-    // ⚠️ Ignora errores de TypeScript en la compilación de Vercel
-    ignoreBuildErrors: true,
-  },
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   eslint: {
-    // ⚠️ Ignora errores de ESLint en la compilación de Vercel
+    // Desactiva la verificación estricta de ESLint al hacer build
     ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Opcional: desactiva errores estrictos de tipos al hacer build
+    ignoreBuildErrors: true,
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

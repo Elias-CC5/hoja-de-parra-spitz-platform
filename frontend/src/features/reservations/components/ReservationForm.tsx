@@ -31,7 +31,7 @@ import { reservationsService } from "../services/reservations.service";
 
 const COMPANY_WHATSAPP_NUMBER = "51994222690";
 
-const EVENT_TYPES_CONFIG: Record<EventType, { label: string; icon: any }> = {
+const EVENT_TYPES_CONFIG: Record<EventType, { label: string; icon: React.ElementType }> = {
   [EventType.MATRIMONIO]: { label: "Matrimonio", icon: Heart },
   [EventType.CUMPLEANOS]: { label: "Cumpleaños", icon: Cake },
   [EventType.EMPRESARIAL]: { label: "Empresarial", icon: Briefcase },
@@ -58,17 +58,14 @@ export function ReservationForm() {
   const onSubmit = async (values: ReservationFormValues) => {
     setErrorMessage(null);
 
-    // 1. Asegurarnos de castear los tipos de datos requeridos por la API
     const formattedPayload = {
       ...values,
       numberOfPeople: Number(values.numberOfPeople),
     };
 
     try {
-      // 2. Guardar obligatoriamente en la Base de Datos
       await reservationsService.create(formattedPayload);
 
-      // 3. Formatear la fecha para WhatsApp
       const [year, month, day] = values.eventDate.split("-");
       const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
       const formattedDate = dateObj.toLocaleDateString("es-ES", {
@@ -79,7 +76,6 @@ export function ReservationForm() {
 
       const eventName = EVENT_TYPES_CONFIG[values.eventType]?.label || values.eventType;
 
-      // 4. Armar el mensaje de WhatsApp
       const message = [
         `*SOLICITUD DE COTIZACION - DEPARRASPITZ*`,
         `=================================`,
@@ -97,17 +93,16 @@ export function ReservationForm() {
         `Quedo a la espera de sus comentarios. ¡Muchas gracias!`,
       ].filter(Boolean).join("\n");
 
-      // 5. Abrir WhatsApp y mostrar estado exitoso
       const whatsappUrl = `https://wa.me/${COMPANY_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
       
       setIsSuccess(true);
       window.open(whatsappUrl, "_blank");
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error al registrar la reserva:", error);
       
-      // Si el servidor retorna error de autenticación u otro fallo
-      const msg = error?.response?.data?.message || "No se pudo registrar la reserva en tu perfil. Asegúrate de haber iniciado sesión.";
+      const err = error as { response?: { data?: { message?: string } } };
+      const msg = err?.response?.data?.message || "No se pudo registrar la reserva en tu perfil. Asegúrate de haber iniciado sesión.";
       setErrorMessage(msg);
     }
   };
@@ -138,8 +133,6 @@ export function ReservationForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
-      
-      {/* Alerta de Error si la BD falla */}
       {errorMessage && (
         <div className="flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-xs text-red-400">
           <AlertCircle className="h-5 w-5 shrink-0 text-red-400" />
@@ -147,7 +140,6 @@ export function ReservationForm() {
         </div>
       )}
 
-      {/* Selector de Eventos */}
       <div className="space-y-3">
         <Label className="text-xs font-semibold uppercase tracking-wider text-neutral-300 flex items-center gap-2">
           <PartyPopper className="h-4 w-4 text-amber-400" />
@@ -184,7 +176,6 @@ export function ReservationForm() {
         {errors.eventType && <p className="text-xs text-red-400 font-medium">Por favor, selecciona un tipo de evento</p>}
       </div>
 
-      {/* Fecha y Hora */}
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="eventDate" className="text-xs font-semibold uppercase tracking-wider text-neutral-300 flex items-center gap-2">
@@ -215,7 +206,6 @@ export function ReservationForm() {
         </div>
       </div>
 
-      {/* Número de personas */}
       <div className="space-y-2">
         <Label htmlFor="numberOfPeople" className="text-xs font-semibold uppercase tracking-wider text-neutral-300 flex items-center gap-2">
           <Users className="h-4 w-4 text-amber-400" />
@@ -234,7 +224,6 @@ export function ReservationForm() {
         )}
       </div>
 
-      {/* Ubicación */}
       <div className="space-y-2">
         <Label htmlFor="address" className="text-xs font-semibold uppercase tracking-wider text-neutral-300 flex items-center gap-2">
           <MapPin className="h-4 w-4 text-amber-400" />
@@ -249,7 +238,6 @@ export function ReservationForm() {
         {errors.address && <p className="text-xs text-red-400 font-medium">{errors.address.message}</p>}
       </div>
 
-      {/* Comentarios */}
       <div className="space-y-2">
         <Label htmlFor="comments" className="text-xs font-semibold uppercase tracking-wider text-neutral-300 flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-amber-400" />
@@ -264,7 +252,6 @@ export function ReservationForm() {
         />
       </div>
 
-      {/* Botón Solicitar Cotización */}
       <Button 
         type="submit" 
         disabled={isSubmitting}
