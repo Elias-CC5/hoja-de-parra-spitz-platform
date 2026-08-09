@@ -1,7 +1,6 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { AnimatedFooter } from "@/components/shared/scroll-stack/animated-footer";
 import { CartDrawer } from "@/features/cart/components/CartDrawer";
-import { ChatWidget } from "@/features/chatbot/components/ChatWidget";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -24,7 +23,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </div>
 
       <CartDrawer />
-      <ChatWidget />
     </>
   );
 }

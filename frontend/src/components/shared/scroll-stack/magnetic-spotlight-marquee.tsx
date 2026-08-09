@@ -3,6 +3,7 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
+import { Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MagneticSpotlightMarqueeProps {
@@ -12,6 +13,10 @@ interface MagneticSpotlightMarqueeProps {
   subtitle?: string[];
   paragraphs?: string[][];
   footerText?: string;
+  /** Imagen/poster para el panel diagonal de acento */
+  accentImage?: string;
+  /** Video opcional para el panel diagonal de acento */
+  accentVideo?: string;
 }
 
 interface WakeTarget {
@@ -81,12 +86,26 @@ export function MagneticSpotlightMarquee({
   subtitle = DEFAULT_SUBTITLE,
   paragraphs = DEFAULT_PARAGRAPHS,
   footerText = "Hoja de Parra · Spitz © Gastronomía de alta gama a fuego lento. Reservas privadas, eventos corporativos y banquetes exclusivos.",
+  accentImage,
+  accentVideo,
 }: MagneticSpotlightMarqueeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const marqueeStripRef = useRef<HTMLDivElement>(null);
   const marqueeTrackRef = useRef<HTMLDivElement>(null);
+  const accentVideoRef = useRef<HTMLVideoElement>(null);
 
   const [clonedImages, setClonedImages] = useState<string[]>(images);
+  const [accentPlaying, setAccentPlaying] = useState(false);
+
+  const toggleAccentPlay = () => {
+    if (!accentVideoRef.current) return;
+    if (accentPlaying) {
+      accentVideoRef.current.pause();
+    } else {
+      accentVideoRef.current.play();
+    }
+    setAccentPlaying(!accentPlaying);
+  };
 
   // ---------------------------------------------------------------------
   // 1. Marquee infinito 100% CSS (corre en el compositor / GPU, no en JS).
@@ -302,6 +321,48 @@ export function MagneticSpotlightMarquee({
       )}
       style={{ transform: "translateZ(0)" }}
     >
+      {/* Panel diagonal de acento (imagen/video) — capa de fondo, detrás del texto */}
+      {(accentImage || accentVideo) && (
+        <div className="spotlight-accent absolute right-0 top-0 h-full w-[38%] min-w-[320px] z-[5] pointer-events-none hidden lg:block">
+          <div className="spotlight-accent-frame absolute inset-0">
+            {accentVideo ? (
+              <video
+                ref={accentVideoRef}
+                src={accentVideo}
+                poster={accentImage}
+                muted
+                loop
+                playsInline
+                className="spotlight-accent-media"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={accentImage}
+                alt=""
+                className="spotlight-accent-media"
+              />
+            )}
+            <div className="spotlight-accent-fade" />
+          </div>
+
+          {accentVideo && (
+            <button
+              onClick={toggleAccentPlay}
+              className="spotlight-accent-play"
+              aria-label={accentPlaying ? "Pausar video" : "Reproducir video"}
+              style={{ pointerEvents: "auto" }}
+            >
+              {accentPlaying ? (
+                <Pause size={16} strokeWidth={2} fill="currentColor" />
+              ) : (
+                <Play size={16} strokeWidth={2} fill="currentColor" />
+              )}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Tira Marquee totalmente aislada de la capa del texto */}
       <div
         ref={marqueeStripRef}
@@ -393,6 +454,59 @@ export function MagneticSpotlightMarquee({
         }
         .animate-marquee {
           animation: marquee-scroll var(--marquee-duration, 20s) linear infinite;
+        }
+
+        .spotlight-accent-frame {
+          clip-path: polygon(18% 0%, 100% 0%, 82% 100%, 0% 100%);
+          overflow: hidden;
+        }
+        .spotlight-accent-media {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          filter: saturate(0.9) brightness(0.85);
+        }
+        .spotlight-accent-fade {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            90deg,
+            #0c0a09 0%,
+            rgba(12, 10, 9, 0.4) 22%,
+            transparent 55%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(12, 10, 9, 0.5) 0%,
+            transparent 30%,
+            rgba(12, 10, 9, 0.7) 100%
+          );
+        }
+        .spotlight-accent-play {
+          position: absolute;
+          bottom: 2rem;
+          right: 2.5rem;
+          width: 2.75rem;
+          height: 2.75rem;
+          border-radius: 999px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(12, 10, 9, 0.55);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1px solid rgba(251, 191, 36, 0.25);
+          color: #fde68a;
+          cursor: pointer;
+          transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+          z-index: 6;
+        }
+        .spotlight-accent-play:hover {
+          background: rgba(251, 191, 36, 0.9);
+          color: #0c0a09;
+          border-color: transparent;
+          transform: scale(1.06);
         }
       `}</style>
     </section>

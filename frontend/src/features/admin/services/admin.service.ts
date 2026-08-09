@@ -13,13 +13,20 @@ export interface DashboardStats {
   topProducts: { productId: string; name: string; unitsSold: number }[];
 }
 
+export interface ProductImageDto {
+  url: string;
+  publicId?: string;
+}
+
 export interface CreateProductDto {
   name: string;
   description?: string;
   price: number;
   category?: string;
+  type?: string;
   isAvailable?: boolean;
-  images?: { url: string }[];
+  isFeatured?: boolean;
+  images?: ProductImageDto[];
 }
 
 // 📦 DTO para actualizar productos (hace que todos los campos sean opcionales)

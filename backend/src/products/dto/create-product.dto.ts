@@ -1,7 +1,6 @@
 import {
   IsArray,
   IsBoolean,
-  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
@@ -12,6 +11,10 @@ import { Type } from 'class-transformer';
 class ImageDto {
   @IsString()
   url!: string;
+
+  @IsOptional()
+  @IsString()
+  publicId?: string;
 }
 
 export class CreateProductDto {
@@ -29,7 +32,6 @@ export class CreateProductDto {
   @IsString()
   category?: string;
 
-  // 👈 AGREGA 'type' COMO OPCIONAL O CON UN VALOR POR DEFECTO
   @IsOptional()
   @IsString()
   type?: string;
