@@ -2,12 +2,6 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { config } from 'dotenv';
 
 config();
-
-/**
- * DataSource usado exclusivamente por la CLI de TypeORM
- * para generar y ejecutar migraciones (npm run migration:*).
- * La app en runtime usa TypeOrmModule.forRootAsync en database.module.ts.
- */
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   host: process.env.DB_HOST ?? 'localhost',
@@ -19,7 +13,11 @@ export const dataSourceOptions: DataSourceOptions = {
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,
   logging: process.env.DB_LOGGING === 'true',
+  // --- AÑADE ESTO AQUÍ TAMBIÉN ---
+  ssl: true,
+  extra: {
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  },
 };
-
-const dataSource = new DataSource(dataSourceOptions);
-export default dataSource;
