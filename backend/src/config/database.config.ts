@@ -2,8 +2,11 @@ import { registerAs } from '@nestjs/config';
 
 export default registerAs('database', (): Record<string, any> => ({
   type: 'postgres',
-  // Usamos la URL directa de Neon para garantizar que tome el SSL y el puerto del pooler
-  url: 'postgresql://neondb_owner:npg_J7y9MFhHKGzR@ep-long-mouse-ay2bnuun-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require',
+  host: process.env.DB_HOST || 'ep-long-mouse-ay2bnuun-pooler.c-5.us-east-2.aws.neon.tech',
+  port: parseInt(process.env.DB_PORT ?? '5432', 10),
+  username: process.env.DB_USERNAME || 'neondb_owner',
+  password: process.env.DB_PASSWORD || 'npg_J7y9MFhHKGzR',
+  database: process.env.DB_NAME || 'neondb',
   synchronize: process.env.DB_SYNCHRONIZE === 'true',
   autoLoadEntities: true,
   ssl: {
