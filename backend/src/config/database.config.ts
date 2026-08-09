@@ -12,4 +12,9 @@ export default registerAs('database', (): Record<string, any> => ({
   ssl: {
     rejectUnauthorized: false,
   },
+  extra: {
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  },
 }));
